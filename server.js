@@ -1538,24 +1538,19 @@ app.use(
 // START
 // ===============================
 
-app.listen(
-  PORT,
-  () => {
+// ===============================
+// EXPORT / LOCAL SERVER
+// ===============================
+
+module.exports = app;
+
+if (require.main === module) {
+  app.listen(PORT, () => {
 
     console.log("");
-
-    console.log(
-      "=================================="
-    );
-
-    console.log(
-      "AI Teacher V2 - RAG Search"
-    );
-
-    console.log(
-      "=================================="
-    );
-
+    console.log("==================================");
+    console.log("AI Teacher V2 - RAG Search");
+    console.log("==================================");
     console.log("");
 
     console.log(
@@ -1568,5 +1563,9 @@ app.listen(
 
     console.log("");
 
-  }
-);
+  });
+}
+  
+  
+
+    
