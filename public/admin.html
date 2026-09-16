@@ -1,0 +1,568 @@
+<!DOCTYPE html>
+
+<html lang="en">
+
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>AI Teacher Admin</title>
+
+<style>
+
+* {
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, sans-serif;
+  background: #f4f7fb;
+  color: #172033;
+}
+
+header {
+  background: #183153;
+  color: white;
+  text-align: center;
+  padding: 24px;
+}
+
+main {
+  max-width: 850px;
+  margin: 30px auto;
+  padding: 18px;
+}
+
+.card {
+  background: white;
+  padding: 24px;
+  border-radius: 16px;
+  box-shadow: 0 8px 30px #0001;
+  margin-bottom: 20px;
+}
+
+input,
+button {
+  width: 100%;
+  padding: 13px;
+  margin: 8px 0;
+  border-radius: 9px;
+  border: 1px solid #ccd3df;
+  font-size: 15px;
+}
+
+button {
+  background: #183153;
+  color: white;
+  font-weight: bold;
+  cursor: pointer;
+  border: none;
+}
+
+button:hover {
+  opacity: 0.9;
+}
+
+.item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  gap: 12px;
+  padding: 14px;
+  border: 1px solid #ddd;
+  border-radius: 9px;
+  margin: 8px 0;
+}
+
+.delete {
+  width: auto;
+  background: #b42318;
+}
+
+.success {
+  color: green;
+}
+
+.error {
+  color: #b42318;
+}
+
+</style>
+
+</head>
+
+<body>
+
+<header>
+
+<h1>AI Teacher Admin</h1>
+
+<p>Private subject &amp; book management</p>
+
+</header>
+
+<main>
+
+<!-- LOGIN -->
+
+<div class="card" id="loginBox">
+
+<h2>Admin Login</h2>
+
+<input
+id="pw"
+type="password"
+placeholder="Enter admin password"
+
+>
+
+<button onclick="login()">
+Login
+</button>
+
+<p id="loginMsg"></p>
+
+</div>
+
+<!-- ADMIN PANEL -->
+
+<div id="panel" style="display:none;">
+
+<div class="card">
+
+<h2>Add Subject &amp; Book</h2>
+
+<input
+id="name"
+type="text"
+placeholder="Subject name, e.g. Data Structures"
+
+>
+
+<input
+id="book"
+type="file"
+accept="application/pdf,.pdf"
+
+>
+
+<button onclick="uploadBook()">
+Upload &amp; Save Book
+</button>
+
+<p id="uploadMsg"></p>
+
+</div>
+
+<!-- SAVED SUBJECTS -->
+
+<div class="card">
+
+<h2>Saved Subjects</h2>
+
+<div id="list">
+No subjects saved yet.
+</div>
+
+</div>
+
+</div>
+
+</main>
+
+<script>
+
+let token = "";
+
+
+/* =========================
+   LOGIN
+========================= */
+
+async function login() {
+
+  const password =
+    document.getElementById("pw").value.trim();
+
+  const loginMsg =
+    document.getElementById("loginMsg");
+
+  if (!password) {
+
+    loginMsg.textContent =
+      "Please enter admin password.";
+
+    return;
+  }
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/login",
+      {
+        method: "POST",
+
+        headers: {
+          "Content-Type": "application/json"
+        },
+
+        body: JSON.stringify({
+          password: password
+        })
+      }
+    );
+
+    const data = await response.json();
+
+    if (!response.ok) {
+
+      loginMsg.textContent =
+        data.error || "Login failed.";
+
+      return;
+    }
+
+    token = data.token;
+
+    document.getElementById("loginBox")
+      .style.display = "none";
+
+    document.getElementById("panel")
+      .style.display = "block";
+
+    loadSubjects();
+
+  } catch (error) {
+
+    console.error(error);
+
+    loginMsg.textContent =
+      "Could not connect to server.";
+
+  }
+
+}
+
+
+/* =========================
+   UPLOAD BOOK
+========================= */
+
+async function uploadBook() {
+
+  const subjectName =
+    document.getElementById("name")
+      .value
+      .trim();
+
+  const file =
+    document.getElementById("book")
+      .files[0];
+
+  const uploadMsg =
+    document.getElementById("uploadMsg");
+
+
+  /* Check subject */
+
+  if (!subjectName) {
+
+    uploadMsg.className = "error";
+
+    uploadMsg.textContent =
+      "Please enter subject name.";
+
+    return;
+  }
+
+
+  /* Check PDF */
+
+  if (!file) {
+
+    uploadMsg.className = "error";
+
+    uploadMsg.textContent =
+      "Please choose a PDF book.";
+
+    return;
+  }
+
+
+  /* Check PDF type */
+
+  if (
+    file.type !== "application/pdf" &&
+    !file.name.toLowerCase().endsWith(".pdf")
+  ) {
+
+    uploadMsg.className = "error";
+
+    uploadMsg.textContent =
+      "Please select a PDF file only.";
+
+    return;
+  }
+
+
+  /* Create form */
+
+  const formData =
+    new FormData();
+
+
+  /*
+    IMPORTANT:
+    server.js expects subjectName
+  */
+
+  formData.append(
+    "subjectName",
+    subjectName
+  );
+
+
+  /*
+    server.js expects book
+  */
+
+  formData.append(
+    "book",
+    file
+  );
+
+
+  uploadMsg.className = "";
+
+  uploadMsg.textContent =
+    "Uploading and saving book...";
+
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/upload",
+      {
+        method: "POST",
+
+        /*
+          IMPORTANT:
+          server.js checks x-admin-token
+        */
+
+        headers: {
+          "x-admin-token": token
+        },
+
+        body: formData
+      }
+    );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      uploadMsg.className = "error";
+
+      uploadMsg.textContent =
+        data.error ||
+        "Book upload failed.";
+
+      return;
+    }
+
+
+    uploadMsg.className =
+      "success";
+
+    uploadMsg.textContent =
+      "Book uploaded and saved successfully!";
+
+
+    /* Clear form */
+
+    document.getElementById("name")
+      .value = "";
+
+    document.getElementById("book")
+      .value = "";
+
+
+    /* Refresh subject list */
+
+    loadSubjects();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    uploadMsg.className = "error";
+
+    uploadMsg.textContent =
+      "Could not connect to server.";
+
+  }
+
+}
+
+
+/* =========================
+   LOAD SUBJECTS
+========================= */
+
+async function loadSubjects() {
+
+  const list =
+    document.getElementById("list");
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/subjects",
+      {
+        method: "GET",
+
+        headers: {
+          "x-admin-token": token
+        }
+      }
+    );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      list.textContent =
+        data.error ||
+        "Could not load subjects.";
+
+      return;
+    }
+
+
+    if (!data.length) {
+
+      list.textContent =
+        "No subjects saved yet.";
+
+      return;
+    }
+
+
+    list.innerHTML =
+      data.map(function(subject) {
+
+        return `
+          <div class="item">
+
+            <span>
+              <b>${subject.name}</b>
+
+              ${
+                subject.pages
+                  ? " — " +
+                    subject.pages +
+                    " pages"
+                  : ""
+              }
+            </span>
+
+            <button
+              class="delete"
+              onclick="deleteSubject('${subject.id}')"
+            >
+              Delete
+            </button>
+
+          </div>
+        `;
+
+      }).join("");
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    list.textContent =
+      "Could not connect to server.";
+
+  }
+
+}
+
+
+/* =========================
+   DELETE SUBJECT
+========================= */
+
+async function deleteSubject(id) {
+
+  const confirmed =
+    confirm(
+      "Delete this subject and saved book?"
+    );
+
+
+  if (!confirmed) {
+    return;
+  }
+
+
+  try {
+
+    const response = await fetch(
+      "/api/admin/subjects/" + id,
+      {
+        method: "DELETE",
+
+        headers: {
+          "x-admin-token": token
+        }
+      }
+    );
+
+
+    const data =
+      await response.json();
+
+
+    if (!response.ok) {
+
+      alert(
+        data.error ||
+        "Delete failed."
+      );
+
+      return;
+    }
+
+
+    loadSubjects();
+
+
+  } catch (error) {
+
+    console.error(error);
+
+    alert(
+      "Could not connect to server."
+    );
+
+  }
+
+}
+
+</script>
+
+</body>
+
+</html>
