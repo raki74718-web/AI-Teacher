@@ -6,7 +6,7 @@ const pdfParse = require("pdf-parse");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
-
+const { createClient } = require("@supabase/supabase-js");
 const app = express();
 
 app.use((req, res, next) => {
@@ -24,7 +24,13 @@ const PORT = 3000;
 
 const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD;
 const GEMINI_API_KEY = process.env.AI_API_KEY;
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_SECRET_KEY = process.env.SUPABASE_SECRET_KEY;
 
+const supabase = createClient(
+  SUPABASE_URL,
+  SUPABASE_SECRET_KEY
+);
 const GEMINI_MODEL = (
   process.env.AI_MODEL || "gemini-3.6-flash"
 )
@@ -594,24 +600,40 @@ function requireAdmin(
 
 app.get(
   "/api/subjects",
-  (req, res) => {
+  async (req, res) => {
 
-    const subjects =
-      loadSubjects();
+    try {
 
-    res.json(
-      subjects.map(
-        (subject) => ({
+      const { data, error } =
+        await supabase
+          .from("subjects")
+          .select("id, name")
+          .order("created_at", {
+            ascending: true
+          });
 
-          id:
-            subject.id,
+      if (error) {
+        throw error;
+      }
 
-          name:
-            subject.name
+      res.json(
+        data || []
+      );
 
-        })
-      )
-    );
+    } catch (error) {
+
+      console.error(
+        "Subjects error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "Could not load subjects."
+        });
+    }
   }
 );
 
@@ -680,14 +702,46 @@ app.post(
 app.get(
   "/api/admin/subjects",
   requireAdmin,
-  (req, res) => {
+  async (req, res) => {
 
-    const subjects =
-      loadSubjects();
+    try {
 
-    res.json(
-      subjects
-    );
+      const {
+        data,
+        error
+      } = await supabase
+        .from("subjects")
+        .select("*")
+        .order(
+          "created_at",
+          {
+            ascending: true
+          }
+        );
+
+      if (error) {
+        throw error;
+      }
+
+      res.json(
+        data || []
+      );
+
+    } catch (error) {
+
+      console.error(
+        "Admin subjects error:",
+        error
+      );
+
+      res
+        .status(500)
+        .json({
+          error:
+            "Could not load saved subjects."
+        });
+
+    }
   }
 );
 
@@ -714,10 +768,8 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
               "Please upload a PDF book."
-
           });
       }
 
@@ -732,10 +784,8 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
               "Subject name is required."
-
           });
       }
 
@@ -771,10 +821,8 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
               "Could not extract text from this PDF. It may be a scanned/image-only PDF."
-
           });
       }
 
@@ -783,7 +831,182 @@ app.post(
           .randomBytes(8)
           .toString("hex");
 
-      // Save complete text
+      /*
+       * --------------------------------
+       * CREATE RAG CHUNKS LOCALLY
+       * --------------------------------
+       */
+
+      const totalChunks =
+        saveSubjectChunks(
+          subjectId,
+          bookText
+        );
+
+      /*
+       * Read generated chunks
+       * so they can be stored permanently
+       */
+
+      const chunksPath =
+        path.join(
+          CHUNKS_DIR,
+          `${subjectId}.json`
+        );
+
+      const chunksJson =
+        fs.readFileSync(
+          chunksPath,
+          "utf8"
+        );
+
+      /*
+       * --------------------------------
+       * SUPABASE STORAGE PATHS
+       * --------------------------------
+       */
+
+      const pdfStoragePath =
+        `${subjectId}/original.pdf`;
+
+      const textStoragePath =
+        `${subjectId}/book.txt`;
+
+      const chunksStoragePath =
+        `${subjectId}/chunks.json`;
+
+      /*
+       * --------------------------------
+       * UPLOAD ORIGINAL PDF
+       * --------------------------------
+       */
+
+      const pdfUpload =
+        await supabase
+          .storage
+          .from("books")
+          .upload(
+            pdfStoragePath,
+            pdfBuffer,
+            {
+              contentType:
+                "application/pdf",
+
+              upsert:
+                true
+            }
+          );
+
+      if (pdfUpload.error) {
+        throw pdfUpload.error;
+      }
+
+      /*
+       * --------------------------------
+       * UPLOAD EXTRACTED TEXT
+       * --------------------------------
+       */
+
+      const textUpload =
+        await supabase
+          .storage
+          .from("books")
+          .upload(
+            textStoragePath,
+            Buffer.from(
+              bookText,
+              "utf8"
+            ),
+            {
+              contentType:
+                "text/plain",
+
+              upsert:
+                true
+            }
+          );
+
+      if (textUpload.error) {
+        throw textUpload.error;
+      }
+
+      /*
+       * --------------------------------
+       * UPLOAD RAG CHUNKS
+       * --------------------------------
+       */
+
+      const chunksUpload =
+        await supabase
+          .storage
+          .from("books")
+          .upload(
+            chunksStoragePath,
+            Buffer.from(
+              chunksJson,
+              "utf8"
+            ),
+            {
+              contentType:
+                "application/json",
+
+              upsert:
+                true
+            }
+          );
+
+      if (chunksUpload.error) {
+        throw chunksUpload.error;
+      }
+
+      /*
+       * --------------------------------
+       * SAVE SUBJECT IN SUPABASE DB
+       * --------------------------------
+       */
+
+      const newSubject = {
+
+        id:
+          subjectId,
+
+        name:
+          subjectName,
+
+        original_file_name:
+          req.file.originalname,
+
+        book_file:
+          textStoragePath,
+
+        characters:
+          bookText.length,
+
+        pages:
+          parsed.numpages ||
+          null,
+
+        chunks:
+          totalChunks
+      };
+
+      const dbInsert =
+        await supabase
+          .from("subjects")
+          .insert(
+            newSubject
+          );
+
+      if (dbInsert.error) {
+        throw dbInsert.error;
+      }
+
+      /*
+       * --------------------------------
+       * ALSO KEEP LOCAL COPY
+       * --------------------------------
+       */
+
       const bookFileName =
         `${subjectId}.txt`;
 
@@ -799,18 +1022,10 @@ app.post(
         "utf8"
       );
 
-      // Create RAG chunks
-      const totalChunks =
-        saveSubjectChunks(
-          subjectId,
-          bookText
-        );
-
-      // Save subject
       const subjects =
         loadSubjects();
 
-      const newSubject = {
+      subjects.push({
 
         id:
           subjectId,
@@ -837,18 +1052,26 @@ app.post(
         createdAt:
           new Date().toISOString()
 
-      };
-
-      subjects.push(
-        newSubject
-      );
+      });
 
       saveSubjects(
         subjects
       );
 
+      /*
+       * --------------------------------
+       * REMOVE TEMP PDF
+       * --------------------------------
+       */
+
+      try {
+        fs.unlinkSync(
+          req.file.path
+        );
+      } catch {}
+
       console.log(
-        "Book saved successfully:",
+        "Book saved permanently to Supabase:",
         subjectName
       );
 
@@ -868,7 +1091,7 @@ app.post(
           true,
 
         message:
-          "Subject, book and RAG chunks saved successfully.",
+          "Subject, PDF, book text and RAG chunks saved permanently.",
 
         subject:
           newSubject
@@ -911,7 +1134,6 @@ app.post(
     }
   }
 );
-
 // ===============================
 // DELETE SUBJECT
 // ===============================
@@ -921,97 +1143,111 @@ app.delete(
 
   requireAdmin,
 
-  (req, res) => {
+  async (req, res) => {
 
-    const subjectId =
-      req.params.id;
+    try {
 
-    const subjects =
-      loadSubjects();
+      const subjectId =
+        req.params.id;
 
-    const subject =
-      subjects.find(
-        (s) =>
-          s.id ===
+      // ===============================
+      // CHECK SUBJECT
+      // ===============================
+
+      const {
+        data: subject,
+        error: subjectError
+      } = await supabase
+        .from("subjects")
+        .select("*")
+        .eq("id", subjectId)
+        .single();
+
+      if (subjectError) {
+        throw subjectError;
+      }
+
+      if (!subject) {
+
+        return res
+          .status(404)
+          .json({
+            error:
+              "Subject not found."
+          });
+      }
+
+      // ===============================
+      // DELETE FILES FROM SUPABASE STORAGE
+      // ===============================
+
+      const filesToDelete = [
+        `${subjectId}/original.pdf`,
+        `${subjectId}/book.txt`,
+        `${subjectId}/chunks.json`
+      ];
+
+      const {
+        error: storageError
+      } = await supabase
+        .storage
+        .from("books")
+        .remove(
+          filesToDelete
+        );
+
+      if (storageError) {
+        throw storageError;
+      }
+
+      // ===============================
+      // DELETE SUBJECT FROM DATABASE
+      // ===============================
+
+      const {
+        error: deleteError
+      } = await supabase
+        .from("subjects")
+        .delete()
+        .eq(
+          "id",
           subjectId
+        );
+
+      if (deleteError) {
+        throw deleteError;
+      }
+
+      res.json({
+
+        success:
+          true,
+
+        message:
+          "Subject, book and chunks deleted successfully."
+
+      });
+
+    } catch (error) {
+
+      console.error(
+        "Delete subject error:",
+        error
       );
 
-    if (!subject) {
-
-      return res
-        .status(404)
+      res
+        .status(500)
         .json({
 
           error:
-            "Subject not found."
+            error.message ||
+            "Could not delete subject."
 
         });
+
     }
-
-    const newSubjects =
-      subjects.filter(
-        (s) =>
-          s.id !==
-          subjectId
-      );
-
-    saveSubjects(
-      newSubjects
-    );
-
-    // Delete book text
-    if (
-      subject.bookFile
-    ) {
-
-      const bookPath =
-        path.join(
-          BOOKS_DIR,
-          subject.bookFile
-        );
-
-      if (
-        fs.existsSync(
-          bookPath
-        )
-      ) {
-
-        fs.unlinkSync(
-          bookPath
-        );
-      }
-    }
-
-    // Delete chunks
-    const chunksPath =
-      path.join(
-        CHUNKS_DIR,
-        `${subjectId}.json`
-      );
-
-    if (
-      fs.existsSync(
-        chunksPath
-      )
-    ) {
-
-      fs.unlinkSync(
-        chunksPath
-      );
-    }
-
-    res.json({
-
-      success:
-        true,
-
-      message:
-        "Subject, book and chunks deleted successfully."
-
-    });
   }
 );
-
 // ===============================
 // GEMINI
 // ===============================
@@ -1281,37 +1517,93 @@ app.post(
           });
       }
 
-      const subjects =
-        loadSubjects();
+     // LOAD SUBJECT FROM SUPABASE
 
-      const subject =
-        subjects.find(
-          (s) =>
-            s.id ===
-            subjectId
-        );
+const {
+  data: subject,
+  error: subjectError
+} = await supabase
+  .from("subjects")
+  .select("*")
+  .eq("id", subjectId)
+  .single();
 
-      if (!subject) {
+if (subjectError) {
+  throw subjectError;
+}
 
-        return res
-          .status(404)
-          .json({
+if (!subject) {
 
-            error:
-              "Selected subject was not found."
+  return res
+    .status(404)
+    .json({
 
-          });
-      }
+      error:
+        "Selected subject was not found."
+
+    });
+}
 
       // ===============================
       // LOAD CHUNKS
       // ===============================
 
-      let chunks =
-        loadSubjectChunks(
-          subjectId
-        );
+     // LOAD RAG CHUNKS FROM SUPABASE
 
+const chunksStoragePath =
+  `${subjectId}/chunks.json`;
+
+const {
+  data: chunksFile,
+  error: chunksError
+} = await supabase
+  .storage
+  .from("books")
+  .download(
+    chunksStoragePath
+  );
+
+if (chunksError) {
+  throw chunksError;
+}
+
+if (!chunksFile) {
+
+  return res
+    .status(404)
+    .json({
+      error:
+        "No saved RAG material was found for this subject."
+    });
+}
+
+const chunksBuffer =
+  Buffer.from(
+    await chunksFile.arrayBuffer()
+  );
+
+const chunksText =
+  chunksBuffer.toString(
+    "utf8"
+  );
+
+let chunks =
+  JSON.parse(
+    chunksText
+  );
+if (!Array.isArray(chunks)) {
+
+  if (Array.isArray(chunks.chunks)) {
+
+    chunks = chunks.chunks;
+
+  } else {
+
+    chunks = Object.values(chunks);
+
+  }
+
+}
       // ===============================
       // COMPATIBILITY
       // ===============================
