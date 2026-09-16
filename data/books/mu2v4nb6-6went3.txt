@@ -1,0 +1,35 @@
+DATA STRUCTURES – SAMPLE STUDY MATERIAL
+B.Tech Computer Science – Demo Material
+1. WHAT IS A DATA STRUCTURE?
+A data structure is a method of organizing and storing data so that the data can be accessed and processed
+efficiently. Common data structures include arrays, linked lists, stacks, queues, trees and graphs.
+2. ARRAY
+An array stores elements of the same data type in contiguous memory locations. Each element can be
+accessed using an index. In a zero-based array, the first element has index 0. Arrays provide fast direct
+access when the index is known.
+3. LINKED LIST
+A linked list is a collection of nodes. Each node contains data and a link to another node. In a singly linked list,
+each node points to the next node. Linked lists can grow or shrink dynamically, but accessing an element by
+position generally requires traversal from the beginning.
+4. STACK
+A stack is a linear data structure that follows the LIFO principle, meaning Last In, First Out. The main
+operations are push, which inserts an element, and pop, which removes the top element. A stack is
+commonly used for function calls, expression evaluation and undo operations.
+5. QUEUE
+A queue is a linear data structure that follows the FIFO principle, meaning First In, First Out. Insertion is
+normally performed at the rear and deletion at the front. Queues are commonly used in scheduling and
+waiting-line systems.
+6. BINARY TREE
+A binary tree is a tree in which each node has at most two children, called the left child and right child. Binary
+trees are useful for representing hierarchical data and are used as the basis for several searching and sorting
+structures.
+IMPORTANT QUESTIONS
+1. What is a data structure?
+A data structure is a method of organizing and storing data for efficient access and processing.
+
+2. What principle does a stack follow?
+A stack follows LIFO (Last In, First Out).
+3. What principle does a queue follow?
+A queue follows FIFO (First In, First Out).
+4. What is the main advantage of array indexing?
+It provides direct access to an element when its index is known.
