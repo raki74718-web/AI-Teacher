@@ -1,1059 +1,1119 @@
-```html
-<!doctype html>
+<!DOCTYPE html>
 <html lang="en">
 <head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width,initial-scale=1">
-
-<title>AI Teacher | Learn Smarter With AI</title>
-
-<style>
-*{
-  box-sizing:border-box;
-}
-
-html{
-  scroll-behavior:smooth;
-}
-
-body{
-  margin:0;
-  font-family:Inter,Arial,sans-serif;
-  background:#f7f9fc;
-  color:#142033;
-}
-
-/* =========================
-   NAVBAR
-========================= */
-
-.navbar{
-  height:70px;
-  background:#ffffff;
-  border-bottom:1px solid #e8edf4;
-  display:flex;
-  align-items:center;
-  justify-content:space-between;
-  padding:0 7%;
-  position:sticky;
-  top:0;
-  z-index:100;
-}
-
-.logo{
-  font-size:22px;
-  font-weight:800;
-  color:#173b72;
-}
-
-.logo span{
-  color:#4f7cff;
-}
-
-.nav-links{
-  display:flex;
-  gap:28px;
-}
-
-.nav-links a{
-  text-decoration:none;
-  color:#526174;
-  font-size:14px;
-  font-weight:600;
-}
-
-.nav-links a:hover{
-  color:#4f7cff;
-}
-
-/* =========================
-   HERO
-========================= */
-
-.hero{
-  background:
-    radial-gradient(circle at 80% 20%,#dfe8ff 0,transparent 35%),
-    linear-gradient(135deg,#f5f8ff,#ffffff);
-
-  padding:75px 20px 65px;
-  text-align:center;
-}
-
-.badge{
-  display:inline-block;
-  padding:8px 14px;
-  border-radius:30px;
-  background:#eaf0ff;
-  color:#3f62c7;
-  font-size:13px;
-  font-weight:700;
-  margin-bottom:18px;
-}
-
-.hero h1{
-  margin:0 auto;
-  max-width:800px;
-  font-size:52px;
-  line-height:1.08;
-  letter-spacing:-1.8px;
-  color:#12294b;
-}
-
-.hero h1 span{
-  color:#4f7cff;
-}
-
-.hero p{
-  max-width:650px;
-  margin:20px auto 0;
-  color:#64748b;
-  font-size:18px;
-  line-height:1.7;
-}
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+  <title>AI Teacher | Learn Smarter</title>
+
+  <style>
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+
+    body {
+      font-family: Arial, Helvetica, sans-serif;
+      background: #f5f7f4;
+      color: #172117;
+    }
+
+    /* ================= NAVBAR ================= */
+
+    .navbar {
+      height: 68px;
+      background: #2f6418;
+      color: white;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 0 30px;
+      box-shadow: 0 3px 12px rgba(0,0,0,.12);
+    }
+
+    .logo {
+      font-size: 24px;
+      font-weight: 900;
+      letter-spacing: .3px;
+    }
+
+    .logo span {
+      color: #ffd83d;
+    }
+
+    .nav-badge {
+      background: rgba(255,255,255,.13);
+      border: 1px solid rgba(255,255,255,.2);
+      padding: 7px 13px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    /* ================= HERO ================= */
+
+    .hero {
+      position: relative;
+      text-align: center;
+      padding: 38px 20px 32px;
+      overflow: hidden;
+
+      background:
+        radial-gradient(
+          circle at 15% 20%,
+          rgba(47,100,24,.10),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 85% 30%,
+          rgba(36,104,199,.10),
+          transparent 28%
+        ),
+        linear-gradient(
+          135deg,
+          #f7fff3,
+          #ffffff,
+          #f1f8ff
+        );
+
+      border-bottom: 1px solid #e5e7eb;
+    }
+
+    .hero::before {
+      content: "";
+      position: absolute;
+      width: 180px;
+      height: 180px;
+      border-radius: 50%;
+      border: 25px solid rgba(47,100,24,.06);
+      top: -90px;
+      left: 8%;
+      animation: heroFloat 6s ease-in-out infinite;
+    }
+
+    .hero::after {
+      content: "";
+      position: absolute;
+      width: 140px;
+      height: 140px;
+      border-radius: 50%;
+      border: 20px solid rgba(36,104,199,.06);
+      bottom: -80px;
+      right: 10%;
+      animation: heroFloat 5s ease-in-out infinite reverse;
+    }
+
+    .hero > * {
+      position: relative;
+      z-index: 2;
+    }
+
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      padding: 7px 15px;
+      border-radius: 30px;
+      background: #eaf7e4;
+      color: #2f6418;
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 1px;
+      margin-bottom: 13px;
+      box-shadow: 0 5px 15px rgba(47,100,24,.08);
+      animation: badgeFloat 2.5s ease-in-out infinite;
+    }
+
+    .hero h1 {
+      margin: 0 auto 10px;
+      max-width: 850px;
+      font-size: clamp(32px, 5vw, 50px);
+      line-height: 1.08;
+      color: #173b0d;
+      font-weight: 900;
+    }
+
+    .hero h1 span {
+      background: linear-gradient(
+        90deg,
+        #2f6418,
+        #0b8f55,
+        #2468c7,
+        #2f6418
+      );
+
+      background-size: 300% auto;
+
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+
+      animation: textGradient 4s linear infinite;
+    }
+
+    .hero p {
+      max-width: 650px;
+      margin: 0 auto;
+      color: #59636e;
+      font-size: 15px;
+      line-height: 1.55;
+    }
+
+    .hero-pills {
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      gap: 9px;
+      flex-wrap: wrap;
+      margin-top: 17px;
+    }
+
+    .hero-pills span {
+      padding: 7px 13px;
+      background: rgba(255,255,255,.9);
+      border: 1px solid #dce7d7;
+      border-radius: 20px;
+      color: #31552a;
+      font-size: 12px;
+      font-weight: 700;
+      box-shadow: 0 4px 12px rgba(0,0,0,.05);
+      transition: .25s ease;
+    }
+
+    .hero-pills span:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 8px 18px rgba(0,0,0,.09);
+    }
+
+    /* ================= MAIN LAYOUT ================= */
+
+    .main-layout {
+      max-width: 1500px;
+      margin: 0 auto;
+      padding: 25px 20px 70px;
+
+      display: grid;
+
+      grid-template-columns:
+        180px
+        minmax(0,1050px)
+        180px;
+
+      gap: 20px;
+
+      justify-content: center;
+      align-items: start;
+    }
+
+    /* ================= SIDE ADS ================= */
 
-/* =========================
-   MAIN 3 COLUMN LAYOUT
-========================= */
+    .side-ad {
+      min-height: 600px;
 
-.main-layout{
-  max-width:1500px;
-  margin:0 auto;
-  padding:25px 20px 70px;
+      position: sticky;
+      top: 90px;
 
-  display:grid;
-  grid-template-columns:180px minmax(0,1050px) 180px;
-  gap:20px;
+      border-radius: 18px;
 
-  justify-content:center;
-  align-items:start;
-}
+      background: white;
 
-/* =========================
-   SIDE ADS
-========================= */
+      border: 1px solid #e4e9e1;
 
-.side-ad{
-  min-height:600px;
+      box-shadow:
+        0 10px 30px rgba(0,0,0,.07);
 
-  background:#ffffff;
+      overflow: hidden;
+    }
 
-  border:1px solid #e2e8f0;
-  border-radius:14px;
+    .ad-card {
+      min-height: 600px;
 
-  box-shadow:0 8px 30px rgba(20,32,51,.05);
+      padding: 22px 15px;
 
-  position:sticky;
-  top:90px;
+      display: flex;
+      flex-direction: column;
 
-  overflow:hidden;
-}
+      justify-content: center;
+      align-items: center;
 
-.side-ad-title{
-  width:100%;
+      text-align: center;
 
-  padding:10px 5px;
+      color: white;
 
-  text-align:center;
+      position: relative;
 
-  font-size:10px;
-  font-weight:700;
+      overflow: hidden;
+    }
 
-  letter-spacing:1px;
+    .ad-card.left {
+      background:
+        linear-gradient(
+          160deg,
+          #173b0d,
+          #2f6418,
+          #0b8f55
+        );
+    }
 
-  color:#94a3b8;
+    .ad-card.right {
+      background:
+        linear-gradient(
+          160deg,
+          #173b4f,
+          #2468c7,
+          #5b35b8
+        );
+    }
 
-  background:#f8fafc;
+    .ad-card::before {
+      content: "";
 
-  border-bottom:1px solid #eef2f7;
-}
+      position: absolute;
 
-.side-ad-content{
-  width:100%;
-  min-height:550px;
+      width: 130px;
+      height: 130px;
 
-  padding:18px 12px;
+      border-radius: 50%;
 
-  display:flex;
-  align-items:center;
-  justify-content:center;
-}
+      border: 25px solid rgba(255,255,255,.08);
 
-/* =========================
-   PROFESSIONAL AD CARD
-========================= */
+      top: -55px;
+      right: -50px;
+    }
 
-.ad-card{
-  width:100%;
+    .ad-card::after {
+      content: "";
 
-  padding:20px 12px;
+      position: absolute;
 
-  text-align:center;
+      width: 100px;
+      height: 100px;
 
-  border-radius:14px;
+      border-radius: 50%;
 
-  background:
-    linear-gradient(
-      180deg,
-      #f5f8ff,
-      #ffffff
-    );
-}
+      border: 20px solid rgba(255,255,255,.07);
 
-.ad-icon{
-  font-size:40px;
-  margin-bottom:14px;
-}
+      bottom: -40px;
+      left: -40px;
+    }
 
-.ad-card h3{
-  margin:0 0 10px;
+    .ad-icon {
+      width: 62px;
+      height: 62px;
 
-  font-size:18px;
-  line-height:1.3;
+      border-radius: 18px;
 
-  color:#172b4d;
-}
+      background: rgba(255,255,255,.16);
 
-.ad-card p{
-  margin:0 0 20px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
 
-  font-size:13px;
-  line-height:1.6;
+      font-size: 31px;
 
-  color:#718096;
-}
+      margin-bottom: 20px;
 
-.ad-button{
-  display:inline-block;
+      border: 1px solid rgba(255,255,255,.2);
 
-  padding:10px 14px;
+      box-shadow: 0 8px 20px rgba(0,0,0,.12);
 
-  border-radius:8px;
+      animation: adFloat 3s ease-in-out infinite;
+    }
 
-  background:#4f7cff;
+    .ad-card h3 {
+      font-size: 21px;
+      line-height: 1.15;
+      margin-bottom: 12px;
+      font-weight: 900;
+    }
 
-  color:#ffffff;
+    .ad-card p {
+      font-size: 12px;
+      line-height: 1.6;
+      color: rgba(255,255,255,.88);
+      margin-bottom: 22px;
+    }
 
-  text-decoration:none;
+    .ad-button {
+      display: inline-block;
 
-  font-size:12px;
-  font-weight:700;
+      text-decoration: none;
 
-  transition:.2s;
-}
+      background: #ffd83d;
+      color: #173b0d;
 
-.ad-button:hover{
-  background:#3d68e8;
-  transform:translateY(-1px);
-}
+      padding: 10px 14px;
 
-/* =========================
-   AI CARD
-========================= */
+      border-radius: 10px;
 
-.ai-card{
-  background:#ffffff;
+      font-size: 11px;
+      font-weight: 900;
 
-  border:1px solid #e7ecf3;
+      box-shadow: 0 7px 16px rgba(0,0,0,.15);
 
-  border-radius:22px;
+      transition: .25s ease;
+    }
 
-  padding:32px;
+    .ad-button:hover {
+      transform: translateY(-3px);
+      box-shadow: 0 11px 22px rgba(0,0,0,.22);
+    }
 
-  box-shadow:
-    0 18px 55px rgba(20,32,51,.08);
-}
+    /* ================= AI TEACHER ================= */
 
-.card-heading{
-  margin-bottom:25px;
-}
+    .teacher-card {
+      background: white;
 
-.card-heading h2{
-  margin:0 0 7px;
+      border-radius: 20px;
 
-  font-size:25px;
+      padding: 30px;
 
-  color:#172b4d;
-}
+      border: 1px solid #e2e8df;
 
-.card-heading p{
-  margin:0;
+      box-shadow:
+        0 12px 35px rgba(0,0,0,.07);
+    }
 
-  color:#718096;
-}
+    .teacher-title {
+      text-align: center;
+      margin-bottom: 25px;
+    }
 
-/* =========================
-   FORM
-========================= */
+    .teacher-title h2 {
+      color: #173b0d;
+      font-size: 27px;
+      margin-bottom: 7px;
+    }
 
-label{
-  display:block;
+    .teacher-title p {
+      color: #6b7280;
+      font-size: 14px;
+    }
 
-  font-weight:700;
+    /* ================= FORM ================= */
 
-  font-size:14px;
+    .form-group {
+      margin-bottom: 18px;
+    }
 
-  margin:18px 0 9px;
+    .form-group label {
+      display: block;
 
-  color:#334155;
-}
+      margin-bottom: 7px;
 
-select,
-textarea{
-  width:100%;
+      font-size: 13px;
 
-  padding:15px 16px;
+      font-weight: 800;
 
-  border:1px solid #d8e0eb;
+      color: #263626;
+    }
 
-  border-radius:12px;
+    select,
+    textarea {
+      width: 100%;
 
-  font-size:15px;
+      border: 1px solid #d7ded3;
 
-  font-family:inherit;
+      border-radius: 11px;
 
-  background:#fbfcfe;
+      padding: 13px;
 
-  color:#172033;
+      font-family: inherit;
 
-  outline:none;
+      font-size: 14px;
 
-  transition:.2s;
-}
+      outline: none;
 
-select:focus,
-textarea:focus{
-  border-color:#6c8cff;
+      background: #fbfdfb;
 
-  box-shadow:
-    0 0 0 4px #eaf0ff;
-}
+      transition: .2s ease;
+    }
 
-textarea{
-  min-height:145px;
+    select:focus,
+    textarea:focus {
+      border-color: #2f6418;
 
-  resize:vertical;
-}
+      box-shadow:
+        0 0 0 3px rgba(47,100,24,.08);
+    }
 
-/* =========================
-   BUTTON
-========================= */
+    textarea {
+      min-height: 130px;
 
-button{
-  margin-top:18px;
+      resize: vertical;
+    }
 
-  width:100%;
+    .ask-button {
+      width: 100%;
 
-  padding:15px 20px;
+      border: none;
 
-  border:0;
+      border-radius: 11px;
 
-  border-radius:12px;
+      padding: 14px;
 
-  background:#4f7cff;
+      background:
+        linear-gradient(
+          90deg,
+          #2f6418,
+          #0b8f55
+        );
 
-  color:#ffffff;
+      color: white;
 
-  font-size:16px;
+      font-size: 15px;
 
-  font-weight:800;
+      font-weight: 900;
 
-  cursor:pointer;
+      cursor: pointer;
 
-  transition:.2s;
-}
+      transition: .25s ease;
+    }
 
-button:hover{
-  background:#3d68e8;
+    .ask-button:hover {
+      transform: translateY(-2px);
 
-  transform:translateY(-1px);
-}
+      box-shadow:
+        0 8px 20px rgba(47,100,24,.2);
+    }
 
-button:disabled{
-  opacity:.6;
+    .ask-button:disabled {
+      opacity: .6;
+      cursor: not-allowed;
+      transform: none;
+    }
 
-  cursor:not-allowed;
+    /* ================= ANSWER ================= */
 
-  transform:none;
-}
+    .status {
+      margin-top: 16px;
 
-/* =========================
-   STATUS
-========================= */
+      text-align: center;
 
-#status{
-  color:#64748b;
+      font-size: 13px;
 
-  font-size:14px;
+      color: #667066;
+    }
 
-  margin:15px 0;
-}
+    .answer-box {
+      margin-top: 18px;
 
-/* =========================
-   ANSWER
-========================= */
+      background: #f6faf4;
 
-.answer-box{
-  margin-top:20px;
-}
+      border: 1px solid #dfeadd;
 
-.answer-title{
-  font-weight:800;
+      border-radius: 12px;
 
-  color:#172b4d;
+      padding: 18px;
 
-  margin-bottom:10px;
-}
+      min-height: 100px;
 
-#answer{
-  padding:20px;
+      color: #243324;
 
-  border:1px solid #e1e7ef;
+      line-height: 1.7;
 
-  background:#f8fafc;
+      font-size: 14px;
 
-  border-radius:14px;
+      white-space: pre-wrap;
+    }
 
-  white-space:pre-wrap;
+    /* ================= FEATURES ================= */
 
-  line-height:1.7;
+    .features {
+      display: grid;
 
-  min-height:120px;
+      grid-template-columns:
+        repeat(3,1fr);
 
-  color:#334155;
-}
+      gap: 15px;
 
-/* =========================
-   FEATURES
-========================= */
+      margin-top: 25px;
+    }
 
-.features{
-  display:grid;
+    .feature {
+      padding: 18px;
 
-  grid-template-columns:
-    repeat(3,1fr);
+      background: #f9fbf8;
 
-  gap:18px;
+      border: 1px solid #e4e9e1;
 
-  margin-top:28px;
-}
+      border-radius: 14px;
 
-.feature{
-  background:#ffffff;
+      text-align: center;
+    }
 
-  border:1px solid #e7ecf3;
+    .feature-icon {
+      font-size: 25px;
+      margin-bottom: 8px;
+    }
 
-  border-radius:16px;
+    .feature h4 {
+      font-size: 14px;
+      color: #25451c;
+      margin-bottom: 5px;
+    }
 
-  padding:22px;
-}
+    .feature p {
+      font-size: 12px;
+      color: #697269;
+      line-height: 1.5;
+    }
 
-.feature-icon{
-  font-size:26px;
+    /* ================= FOOTER ================= */
 
-  margin-bottom:12px;
-}
+    footer {
+      background: #173b0d;
 
-.feature h3{
-  margin:0 0 7px;
+      color: rgba(255,255,255,.8);
 
-  font-size:16px;
-}
+      text-align: center;
 
-.feature p{
-  margin:0;
+      padding: 22px 15px;
 
-  color:#718096;
+      font-size: 12px;
+    }
 
-  font-size:14px;
+    footer strong {
+      color: white;
+    }
 
-  line-height:1.6;
-}
+    /* ================= ANIMATIONS ================= */
 
-/* =========================
-   FOOTER
-========================= */
+    @keyframes textGradient {
+      0% {
+        background-position: 0% center;
+      }
 
-footer{
-  background:#12294b;
+      100% {
+        background-position: 300% center;
+      }
+    }
 
-  color:#ffffff;
+    @keyframes badgeFloat {
+      0%,100% {
+        transform: translateY(0);
+      }
 
-  padding:35px 20px;
+      50% {
+        transform: translateY(-4px);
+      }
+    }
 
-  text-align:center;
-}
+    @keyframes heroFloat {
+      0%,100% {
+        transform: translateY(0) rotate(0deg);
+      }
 
-footer h3{
-  margin:0 0 8px;
-}
+      50% {
+        transform: translateY(-12px) rotate(8deg);
+      }
+    }
 
-footer p{
-  margin:0;
+    @keyframes adFloat {
+      0%,100% {
+        transform: translateY(0);
+      }
 
-  color:#b9c5d8;
+      50% {
+        transform: translateY(-6px);
+      }
+    }
 
-  font-size:13px;
-}
+    /* ================= TABLET ================= */
 
-/* =========================
-   TABLET
-========================= */
+    @media (max-width: 1100px) {
 
-@media(max-width:1100px){
+      .main-layout {
+        grid-template-columns:
+          140px
+          minmax(0,1fr)
+          140px;
 
-  .main-layout{
-    grid-template-columns:
-      140px
-      minmax(0,1fr)
-      140px;
+        gap: 14px;
+      }
 
-    gap:12px;
-  }
+      .ad-card h3 {
+        font-size: 17px;
+      }
 
-}
+      .ad-card p {
+        font-size: 11px;
+      }
+    }
 
-/* =========================
-   MOBILE
-========================= */
+    /* ================= MOBILE ================= */
 
-@media(max-width:700px){
+    @media (max-width: 800px) {
 
-  .navbar{
-    padding:0 20px;
-  }
+      .navbar {
+        padding: 0 18px;
+      }
 
-  .nav-links{
-    display:none;
-  }
+      .nav-badge {
+        display: none;
+      }
 
-  .hero{
-    padding:55px 18px;
-  }
+      .main-layout {
+        display: block;
 
-  .hero h1{
-    font-size:38px;
-  }
+        padding:
+          18px 14px 50px;
+      }
 
-  .hero p{
-    font-size:16px;
-  }
+      .side-ad {
+        display: none;
+      }
 
-  /* Hide side advertisements on mobile */
+      .teacher-card {
+        padding: 20px 16px;
+      }
 
-  .side-ad{
-    display:none;
-  }
+      .features {
+        grid-template-columns: 1fr;
+      }
 
-  .main-layout{
-    display:block;
+      .hero {
+        padding:
+          28px 15px 25px;
+      }
 
-    padding:
-      0
-      14px
-      50px;
-  }
+      .hero h1 {
+        font-size: 31px;
+      }
 
-  .ai-card{
-    padding:22px;
-  }
+      .hero p {
+        font-size: 14px;
+      }
 
-  .features{
-    grid-template-columns:1fr;
-  }
+      .hero-pills {
+        gap: 7px;
+      }
 
-}
-</style>
+      .hero-pills span {
+        font-size: 11px;
+        padding: 6px 10px;
+      }
+    }
+  </style>
 </head>
-
 
 <body>
 
+  <!-- ================= NAVBAR ================= -->
 
-<!-- =========================
-     NAVBAR
-========================= -->
+  <nav class="navbar">
 
-<nav class="navbar">
-
-  <div class="logo">
-    AI<span>Teacher</span>
-  </div>
-
-  <div class="nav-links">
-
-    <a href="#teacher">
-      AI Teacher
-    </a>
-
-    <a href="#features">
-      Features
-    </a>
-
-    <a href="#about">
-      About
-    </a>
-
-  </div>
-
-</nav>
-
-
-<!-- =========================
-     HERO
-========================= -->
-
-<section class="hero">
-
-  <div class="badge">
-    AI-Powered Learning
-  </div>
-
-  <h1>
-    Learn from your books with your
-    <span>AI Teacher.</span>
-  </h1>
-
-  <p>
-    Ask questions from your study material and get
-    clear, focused answers powered by AI.
-  </p>
-
-</section>
-
-
-<!-- =========================
-     MAIN LAYOUT
-========================= -->
-
-<div class="main-layout">
-
-
-  <!-- =====================
-       LEFT ADVERTISEMENT
-  ====================== -->
-
-  <aside class="side-ad">
-
-    <div class="side-ad-title">
-      ADVERTISEMENT
+    <div class="logo">
+      AI<span>Teacher</span>
     </div>
 
-    <div class="side-ad-content">
+    <div class="nav-badge">
+      Learn • Ask • Understand
+    </div>
 
-      <div class="ad-card">
+  </nav>
+
+
+  <!-- ================= HERO ================= -->
+
+  <section class="hero">
+
+    <div class="hero-badge">
+      ✨ AI-POWERED LEARNING
+    </div>
+
+    <h1>
+      Learn Smarter with Your
+      <span>AI Teacher</span>
+    </h1>
+
+    <p>
+      Ask questions from your books and get clear,
+      focused answers instantly.
+    </p>
+
+    <div class="hero-pills">
+
+      <span>📚 Your Books</span>
+
+      <span>🤖 AI Answers</span>
+
+      <span>⚡ Learn Faster</span>
+
+    </div>
+
+  </section>
+
+
+  <!-- ================= MAIN ================= -->
+
+  <div class="main-layout">
+
+
+    <!-- ================= LEFT AD ================= -->
+
+    <aside class="side-ad">
+
+      <div class="ad-card left">
 
         <div class="ad-icon">
           🎓
         </div>
 
         <h3>
-          Learn AI & Coding
+          Master AI &
+          Data Structures
         </h3>
 
         <p>
-          Build your future with AI,
-          Programming and Data Science.
+          Build strong technical
+          skills for your
+          engineering journey.
         </p>
 
         <a
           href="#"
           class="ad-button"
         >
-          Learn More
+          START LEARNING →
         </a>
 
       </div>
 
-    </div>
-
-  </aside>
+    </aside>
 
 
-  <!-- =====================
-       CENTER CONTENT
-  ====================== -->
+    <!-- ================= CENTER ================= -->
 
-  <div>
+    <main>
 
+      <section class="teacher-card">
 
-    <!-- AI TEACHER -->
+        <div class="teacher-title">
 
-    <section
-      class="ai-card"
-      id="teacher"
-    >
+          <h2>
+            🤖 Ask Your AI Teacher
+          </h2>
 
-      <div class="card-heading">
+          <p>
+            Select a subject and ask a question
+            from your saved study material.
+          </p>
 
-        <h2>
-          Ask AI Teacher
-        </h2>
-
-        <p>
-          Select your subject and ask a question from the saved study material.
-        </p>
-
-      </div>
-
-
-      <label for="subject">
-        Select Subject
-      </label>
-
-      <select id="subject">
-
-        <option>
-          Loading subjects...
-        </option>
-
-      </select>
-
-
-      <label for="question">
-        Your Question
-      </label>
-
-      <textarea
-        id="question"
-        placeholder="Example: Explain deadlock in simple terms."
-      ></textarea>
-
-
-      <button id="ask">
-        Ask AI Teacher
-      </button>
-
-
-      <p id="status"></p>
-
-
-      <div class="answer-box">
-
-        <div class="answer-title">
-          AI Teacher Answer
         </div>
 
-        <div id="answer">
-          Your answer will appear here.
+
+        <div class="form-group">
+
+          <label for="subject">
+            📚 Select Subject
+          </label>
+
+          <select id="subject">
+            <option value="">
+              Loading subjects...
+            </option>
+          </select>
+
         </div>
 
-      </div>
 
-    </section>
+        <div class="form-group">
 
+          <label for="question">
+            ❓ Your Question
+          </label>
 
-    <!-- =====================
-         FEATURES
-    ====================== -->
+          <textarea
+            id="question"
+            placeholder="Example: Explain data structures in simple words..."
+          ></textarea>
 
-    <section
-      class="features"
-      id="features"
-    >
-
-
-      <div class="feature">
-
-        <div class="feature-icon">
-          📚
         </div>
 
-        <h3>
-          Book-Based Learning
-        </h3>
 
-        <p>
-          Ask questions using the subjects and study material
-          available in the AI Teacher knowledge base.
-        </p>
-
-      </div>
+        <button
+          id="ask"
+          class="ask-button"
+        >
+          Ask AI Teacher 🚀
+        </button>
 
 
-      <div class="feature">
+        <div
+          id="status"
+          class="status"
+        ></div>
 
-        <div class="feature-icon">
-          🤖
+
+        <div
+          id="answer"
+          class="answer-box"
+        >
+          Your AI Teacher's answer will appear here.
         </div>
 
-        <h3>
-          AI-Powered Answers
-        </h3>
 
-        <p>
-          Get explanations generated from the selected
-          subject material.
-        </p>
+        <!-- ================= FEATURES ================= -->
 
-      </div>
+        <div class="features">
+
+          <div class="feature">
+
+            <div class="feature-icon">
+              📖
+            </div>
+
+            <h4>
+              Book-Based
+            </h4>
+
+            <p>
+              Learn from your saved
+              study material.
+            </p>
+
+          </div>
 
 
-      <div class="feature">
+          <div class="feature">
 
-        <div class="feature-icon">
-          🎓
+            <div class="feature-icon">
+              🤖
+            </div>
+
+            <h4>
+              AI Powered
+            </h4>
+
+            <p>
+              Get focused answers
+              to your questions.
+            </p>
+
+          </div>
+
+
+          <div class="feature">
+
+            <div class="feature-icon">
+              ⚡
+            </div>
+
+            <h4>
+              Fast Learning
+            </h4>
+
+            <p>
+              Understand difficult
+              topics more easily.
+            </p>
+
+          </div>
+
         </div>
 
-        <h3>
-          Built for Students
-        </h3>
+      </section>
 
-        <p>
-          Designed to make difficult technical subjects
-          easier to understand.
-        </p>
-
-      </div>
+    </main>
 
 
-    </section>
+    <!-- ================= RIGHT AD ================= -->
 
-  </div>
+    <aside class="side-ad">
 
-
-  <!-- =====================
-       RIGHT ADVERTISEMENT
-  ====================== -->
-
-  <aside class="side-ad">
-
-    <div class="side-ad-title">
-      ADVERTISEMENT
-    </div>
-
-    <div class="side-ad-content">
-
-      <div class="ad-card">
+      <div class="ad-card right">
 
         <div class="ad-icon">
           💻
         </div>
 
         <h3>
-          Master Programming
+          Build Your
+          Tech Future
         </h3>
 
         <p>
-          Learn Python, Java,
-          Data Structures and AI.
+          AI • Python • Full Stack
+          • Data Science
+          and more.
         </p>
 
         <a
           href="#"
           class="ad-button"
         >
-          Explore Course
+          EXPLORE COURSES →
         </a>
 
       </div>
 
-    </div>
+    </aside>
 
-  </aside>
+  </div>
 
 
-</div>
+  <!-- ================= FOOTER ================= -->
 
+  <footer>
 
-<!-- =========================
-     FOOTER
-========================= -->
+    <strong>AI Teacher</strong>
+    — Learn smarter with AI.
 
-<footer id="about">
+  </footer>
 
-  <h3>
-    AI Teacher
-  </h3>
 
-  <p>
-    Learn smarter. Ask better questions.
-  </p>
+  <!-- ================= JAVASCRIPT ================= -->
 
-  <p style="margin-top:10px;">
-    © 2026 AI Teacher
-  </p>
+  <script>
 
-</footer>
+    const subject =
+      document.getElementById('subject');
 
+    const question =
+      document.getElementById('question');
 
-<!-- =========================
-     JAVASCRIPT
-========================= -->
+    const ask =
+      document.getElementById('ask');
 
-<script>
+    const status =
+      document.getElementById('status');
 
-const subject =
-  document.getElementById('subject');
+    const answer =
+      document.getElementById('answer');
 
-const question =
-  document.getElementById('question');
 
-const ask =
-  document.getElementById('ask');
+    async function load() {
 
-const status =
-  document.getElementById('status');
+      try {
 
-const answer =
-  document.getElementById('answer');
+        const r = await fetch(
+          'https://ai-teacher-backend-6htm.onrender.com/api/subjects'
+        );
 
+        const d = await r.json();
 
-/* =========================
-   LOAD SUBJECTS
-========================= */
+        subject.innerHTML =
+          '<option value="">-- Select Subject --</option>';
 
-async function load(){
+        d.forEach(s => {
 
-  try{
+          const o =
+            document.createElement('option');
 
-    const r = await fetch(
-      'https://ai-teacher-backend-6htm.onrender.com/api/subjects'
-    );
+          o.value = s.id;
 
-    const d = await r.json();
+          o.textContent = s.name;
 
+          subject.appendChild(o);
 
-    subject.innerHTML =
-      '<option value="">-- Select Subject --</option>';
+        });
 
 
-    d.forEach(s => {
+        if (!d.length) {
 
-      const o =
-        document.createElement('option');
+          subject.innerHTML =
+            '<option value="">No subjects added yet</option>';
 
-      o.value = s.id;
+        }
 
-      o.textContent = s.name;
+      } catch {
 
-      subject.appendChild(o);
-
-    });
-
-
-    if(!d.length){
-
-      subject.innerHTML =
-        '<option value="">No subjects added yet</option>';
-
-    }
-
-
-  }catch{
-
-    subject.innerHTML =
-      '<option>Could not load subjects</option>';
-
-  }
-
-}
-
-
-/* =========================
-   ASK AI TEACHER
-========================= */
-
-ask.onclick = async () => {
-
-
-  if(
-    !subject.value ||
-    !question.value.trim()
-  ){
-
-    status.textContent =
-      'Please select a subject and enter a question.';
-
-    return;
-
-  }
-
-
-  ask.disabled = true;
-
-
-  status.textContent =
-    'AI Teacher is reading the saved book...';
-
-
-  answer.textContent = '';
-
-
-  try{
-
-
-    const r = await fetch(
-
-      'https://ai-teacher-backend-6htm.onrender.com/api/ask',
-
-      {
-
-        method:'POST',
-
-        headers:{
-          'Content-Type':'application/json'
-        },
-
-        body:JSON.stringify({
-
-          subjectId:
-            subject.value,
-
-          question:
-            question.value
-
-        })
+        subject.innerHTML =
+          '<option>Could not load subjects</option>';
 
       }
 
-    );
-
-
-    const d =
-      await r.json();
-
-
-    if(!r.ok){
-
-      throw Error(
-        d.error ||
-        'Request failed'
-      );
-
     }
 
 
-    answer.textContent =
-      d.answer;
+    ask.onclick = async () => {
+
+      if (
+        !subject.value ||
+        !question.value.trim()
+      ) {
+
+        status.textContent =
+          'Please select a subject and enter a question.';
+
+        return;
+
+      }
 
 
-    status.textContent =
-      'Done.';
+      ask.disabled = true;
+
+      status.textContent =
+        'AI Teacher is reading the saved book...';
+
+      answer.textContent = '';
 
 
-  }catch(e){
+      try {
 
-    answer.textContent =
-      'Error: ' + e.message;
+        const r = await fetch(
+          'https://ai-teacher-backend-6htm.onrender.com/api/ask',
+          {
+            method: 'POST',
 
-    status.textContent = '';
+            headers: {
+              'Content-Type': 'application/json'
+            },
 
-  }finally{
+            body: JSON.stringify({
 
-    ask.disabled = false;
+              subjectId:
+                subject.value,
 
-  }
+              question:
+                question.value
 
-};
+            })
+
+          }
+        );
 
 
-/* START */
+        const d =
+          await r.json();
 
-load();
 
-</script>
+        if (!r.ok) {
 
+          throw Error(
+            d.error ||
+            'Request failed'
+          );
+
+        }
+
+
+        answer.textContent =
+          d.answer;
+
+        status.textContent =
+          'Done.';
+
+      } catch (e) {
+
+        answer.textContent =
+          'Error: ' + e.message;
+
+        status.textContent =
+          '';
+
+      } finally {
+
+        ask.disabled = false;
+
+      }
+
+    };
+
+
+    load();
+
+  </script>
 
 </body>
 </html>
-```
