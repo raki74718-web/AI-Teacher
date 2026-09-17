@@ -8,5 +8,25 @@
     "pages": 85,
     "chunks": 84,
     "createdAt": "2026-09-16T05:25:33.416Z"
+  },
+  {
+    "id": "225a72c54c248230",
+    "name": "OS",
+    "originalFileName": "Operating_Systems_AI_Teacher_RAG_Test_Book.pdf",
+    "bookFile": "225a72c54c248230.txt",
+    "characters": 7831,
+    "pages": 13,
+    "chunks": 4,
+    "createdAt": "2026-09-16T12:43:06.786Z"
+  },
+  {
+    "id": "a8959bc38e87780e",
+    "name": "Data Structure",
+    "originalFileName": "Data_Structures_Sample_Material (1).pdf",
+    "bookFile": "a8959bc38e87780e.txt",
+    "characters": 2070,
+    "pages": 2,
+    "chunks": 1,
+    "createdAt": "2026-09-16T13:10:24.714Z"
   }
 ]

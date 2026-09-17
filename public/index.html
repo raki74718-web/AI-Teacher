@@ -1,4 +1,4 @@
-
+```html
 <!doctype html>
 <html lang="en">
 <head>
@@ -106,32 +106,65 @@ body{
   line-height:1.7;
 }
 
-/* MAIN */
+/* MAIN PAGE LAYOUT */
 
-main{
-  max-width:1050px;
-  margin:-25px auto 70px;
-  padding:0 20px;
-  position:relative;
+.main-layout{
+  max-width:1500px;
+  margin:0 auto;
+  padding:25px 20px 70px;
+
+  display:grid;
+  grid-template-columns:180px minmax(0,1050px) 180px;
+  gap:20px;
+  justify-content:center;
+  align-items:start;
 }
 
-/* AD SLOT */
+/* SIDE ADVERTISEMENT */
 
-.ad-slot{
-  min-height:70px;
+.side-ad{
+  min-height:600px;
   background:#ffffff;
   border:1px dashed #cbd5e1;
   border-radius:12px;
+
+  display:flex;
+  flex-direction:column;
+  align-items:center;
+  justify-content:flex-start;
+
+  color:#94a3b8;
+  text-align:center;
+
+  position:sticky;
+  top:90px;
+  overflow:hidden;
+}
+
+.side-ad-title{
+  width:100%;
+  padding:10px 5px;
+  font-size:10px;
+  font-weight:700;
+  letter-spacing:1px;
+  color:#94a3b8;
+  border-bottom:1px solid #eef2f7;
+}
+
+.side-ad-content{
+  width:100%;
+  min-height:520px;
+
   display:flex;
   align-items:center;
   justify-content:center;
-  color:#94a3b8;
-  font-size:12px;
-  margin:25px 0;
+
+  padding:15px;
 }
 
-.ad-slot span{
-  letter-spacing:.5px;
+.side-ad-content span{
+  font-size:13px;
+  color:#9aa6b5;
 }
 
 /* AI CARD */
@@ -304,6 +337,17 @@ footer p{
   font-size:13px;
 }
 
+/* TABLET */
+
+@media(max-width:1100px){
+
+  .main-layout{
+    grid-template-columns:140px minmax(0,1fr) 140px;
+    gap:12px;
+  }
+
+}
+
 /* MOBILE */
 
 @media(max-width:700px){
@@ -328,8 +372,15 @@ footer p{
     font-size:16px;
   }
 
-  main{
-    padding:0 14px;
+  /* Hide advertisements on mobile */
+
+  .side-ad{
+    display:none;
+  }
+
+  .main-layout{
+    display:block;
+    padding:0 14px 50px;
   }
 
   .ai-card{
@@ -339,6 +390,7 @@ footer p{
   .features{
     grid-template-columns:1fr;
   }
+
 }
 </style>
 </head>
@@ -383,124 +435,182 @@ footer p{
 </section>
 
 
+<!-- MAIN LAYOUT -->
 
+<div class="main-layout">
 
+  <!-- LEFT ADVERTISEMENT -->
 
-  <!-- AI TEACHER -->
+  <aside class="side-ad">
 
-  <section class="ai-card" id="teacher">
-
-    <div class="card-heading">
-      <h2>Ask AI Teacher</h2>
-      <p>Select your subject and ask a question from the saved study material.</p>
+    <div class="side-ad-title">
+      ADVERTISEMENT
     </div>
 
+    <div class="side-ad-content">
+      <span>
+        Your Advertisement
+      </span>
+    </div>
 
-    <label for="subject">
-      Select Subject
-    </label>
-
-    <select id="subject">
-      <option>Loading subjects...</option>
-    </select>
-
-
-    <label for="question">
-      Your Question
-    </label>
-
-    <textarea
-      id="question"
-      placeholder="Example: Explain deadlock in simple terms."
-    ></textarea>
+  </aside>
 
 
-    <button id="ask">
-      Ask AI Teacher
-    </button>
+  <!-- CENTER CONTENT -->
 
+  <div>
 
-    <p id="status"></p>
+    <!-- AI TEACHER -->
 
+    <section class="ai-card" id="teacher">
 
-    <div class="answer-box">
+      <div class="card-heading">
 
-      <div class="answer-title">
-        AI Teacher Answer
+        <h2>
+          Ask AI Teacher
+        </h2>
+
+        <p>
+          Select your subject and ask a question from the saved study material.
+        </p>
+
       </div>
 
-      <div id="answer">
-        Your answer will appear here.
+
+      <label for="subject">
+        Select Subject
+      </label>
+
+      <select id="subject">
+
+        <option>
+          Loading subjects...
+        </option>
+
+      </select>
+
+
+      <label for="question">
+        Your Question
+      </label>
+
+      <textarea
+        id="question"
+        placeholder="Example: Explain deadlock in simple terms."
+      ></textarea>
+
+
+      <button id="ask">
+        Ask AI Teacher
+      </button>
+
+
+      <p id="status"></p>
+
+
+      <div class="answer-box">
+
+        <div class="answer-title">
+          AI Teacher Answer
+        </div>
+
+        <div id="answer">
+          Your answer will appear here.
+        </div>
+
       </div>
 
-    </div>
-
-  </section>
+    </section>
 
 
+    <!-- FEATURES -->
 
-  <!-- FEATURES -->
+    <section class="features" id="features">
 
-  <section class="features" id="features">
+      <div class="feature">
 
-    <div class="feature">
-      <div class="feature-icon">📚</div>
-      <h3>Book-Based Learning</h3>
-      <p>
-        Ask questions using the subjects and study material
-        available in the AI Teacher knowledge base.
-      </p>
-    </div>
+        <div class="feature-icon">
+          📚
+        </div>
 
-    <div class="feature">
-      <div class="feature-icon">🤖</div>
-      <h3>AI-Powered Answers</h3>
-      <p>
-        Get explanations generated from the selected
-        subject material.
-      </p>
-    </div>
+        <h3>
+          Book-Based Learning
+        </h3>
 
-    <div class="feature">
-      <div class="feature-icon">🎓</div>
-      <h3>Built for Students</h3>
-      <p>
-        Designed to make difficult technical subjects
-        easier to understand.
-      </p>
-    </div>
+        <p>
+          Ask questions using the subjects and study material
+          available in the AI Teacher knowledge base.
+        </p>
 
-  </section>
+      </div>
 
 
-<!-- BOTTOM VIDEO AD SLOT -->
+      <div class="feature">
 
-<div class="ad-slot" style="padding:20px; text-align:center;">
-  <div style="font-weight:700; font-size:18px; margin-bottom:10px;">
-    Featured Video
+        <div class="feature-icon">
+          🤖
+        </div>
+
+        <h3>
+          AI-Powered Answers
+        </h3>
+
+        <p>
+          Get explanations generated from the selected
+          subject material.
+        </p>
+
+      </div>
+
+
+      <div class="feature">
+
+        <div class="feature-icon">
+          🎓
+        </div>
+
+        <h3>
+          Built for Students
+        </h3>
+
+        <p>
+          Designed to make difficult technical subjects
+          easier to understand.
+        </p>
+
+      </div>
+
+    </section>
+
   </div>
 
-  <p style="margin:0 0 16px; color:#667085;">
-    Watch our featured video
-  </p>
 
-  <a
-    href="https://youtu.be/wYaiAd0IevE?si=vNAmTZDim7bbvPbb"
-    target="_blank"
-    rel="noopener noreferrer"
-    style="display:inline-block; padding:12px 22px; background:#2563eb; color:white; text-decoration:none; border-radius:10px; font-weight:700;">
-    ▶ Watch Video on YouTube
-  </a>
+  <!-- RIGHT ADVERTISEMENT -->
+
+  <aside class="side-ad">
+
+    <div class="side-ad-title">
+      ADVERTISEMENT
+    </div>
+
+    <div class="side-ad-content">
+      <span>
+        Your Advertisement
+      </span>
+    </div>
+
+  </aside>
+
 </div>
-
-</main>
 
 
 <!-- FOOTER -->
 
 <footer id="about">
 
-  <h3>AI Teacher</h3>
+  <h3>
+    AI Teacher
+  </h3>
 
   <p>
     Learn smarter. Ask better questions.
