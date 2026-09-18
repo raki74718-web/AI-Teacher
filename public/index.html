@@ -1,4 +1,3 @@
-```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -20,7 +19,6 @@
       color: #1f2937;
     }
 
-    /* NAVBAR */
     .navbar {
       background: #2f6418;
       color: white;
@@ -44,7 +42,6 @@
       opacity: 0.95;
     }
 
-    /* HERO */
     .hero {
       background: white;
       text-align: center;
@@ -96,7 +93,6 @@
       font-size: 13px;
     }
 
-    /* MAIN */
     .main-container {
       max-width: 1400px;
       margin: 30px auto;
@@ -107,7 +103,6 @@
       align-items: start;
     }
 
-    /* ADS */
     .ad {
       border-radius: 18px;
       padding: 25px 18px;
@@ -148,7 +143,6 @@
       cursor: pointer;
     }
 
-    /* AI CARD */
     .teacher-card {
       background: white;
       border-radius: 20px;
@@ -223,7 +217,6 @@
       cursor: not-allowed;
     }
 
-    /* STATUS */
     .status {
       text-align: center;
       margin: 15px 0;
@@ -232,7 +225,6 @@
       min-height: 20px;
     }
 
-    /* ANSWER */
     .answer-container {
       margin-top: 20px;
     }
@@ -254,7 +246,6 @@
       color: #263326;
     }
 
-    /* SOURCE */
     .source-info {
       margin-top: 20px;
       padding: 16px;
@@ -270,7 +261,6 @@
       color: #245112;
     }
 
-    /* FEATURES */
     .features {
       display: grid;
       grid-template-columns: repeat(3, 1fr);
@@ -286,7 +276,6 @@
       font-size: 13px;
     }
 
-    /* FOOTER */
     footer {
       text-align: center;
       padding: 30px 20px;
@@ -294,7 +283,6 @@
       font-size: 13px;
     }
 
-    /* MOBILE */
     @media (max-width: 1000px) {
       .main-container {
         grid-template-columns: 1fr;
@@ -337,7 +325,6 @@
 
 <body>
 
-  <!-- NAVBAR -->
   <nav class="navbar">
 
     <div class="logo">
@@ -351,7 +338,6 @@
   </nav>
 
 
-  <!-- HERO -->
   <section class="hero">
 
     <div class="badge">
@@ -387,11 +373,8 @@
   </section>
 
 
-  <!-- MAIN -->
   <main class="main-container">
 
-
-    <!-- LEFT AD -->
     <aside class="ad ad-left">
 
       <h3>
@@ -410,7 +393,6 @@
     </aside>
 
 
-    <!-- AI TEACHER -->
     <section class="teacher-card">
 
       <div class="teacher-header">
@@ -427,7 +409,6 @@
       </div>
 
 
-      <!-- SUBJECT -->
       <div class="field">
 
         <label for="subject">
@@ -445,7 +426,6 @@
       </div>
 
 
-      <!-- QUESTION -->
       <div class="field">
 
         <label for="question">
@@ -460,7 +440,6 @@
       </div>
 
 
-      <!-- ASK BUTTON -->
       <button
         id="ask"
         class="ask-button"
@@ -469,14 +448,12 @@
       </button>
 
 
-      <!-- STATUS -->
       <div
         id="status"
         class="status"
       ></div>
 
 
-      <!-- ANSWER -->
       <div class="answer-container">
 
         <div class="answer-title">
@@ -493,7 +470,6 @@
       </div>
 
 
-      <!-- FEATURES -->
       <div class="features">
 
         <div class="feature">
@@ -513,7 +489,6 @@
     </section>
 
 
-    <!-- RIGHT AD -->
     <aside class="ad ad-right">
 
       <h3>
@@ -534,13 +509,31 @@
   </main>
 
 
-  <!-- FOOTER -->
   <footer>
     © 2026 AI Teacher • Learn Smarter with AI
   </footer>
 
 
   <script>
+
+    /*
+     * ==========================================
+     * API CONFIGURATION
+     * ==========================================
+     *
+     * Local:
+     * http://localhost:3000
+     *
+     * Public:
+     * Render backend
+     */
+
+    const API_BASE =
+      window.location.hostname === 'localhost' ||
+      window.location.hostname === '127.0.0.1'
+        ? 'http://localhost:3000'
+        : 'https://ai-teacher-backend-6htm.onrender.com';
+
 
     /*
      * ELEMENTS
@@ -578,7 +571,9 @@
 
 
         const response =
-          await fetch('/api/subjects');
+          await fetch(
+            API_BASE + '/api/subjects'
+          );
 
 
         const data =
@@ -621,32 +616,35 @@
         }
 
 
-        data.forEach(item => {
+        data.forEach(
+          function (item) {
 
-          const option =
-            document.createElement('option');
-
-
-          option.value =
-            item.id;
+            const option =
+              document.createElement('option');
 
 
-          option.textContent =
-            item.name;
+            option.value =
+              item.id;
 
 
-          subject.appendChild(
-            option
-          );
+            option.textContent =
+              item.name;
 
-        });
+
+            subject.appendChild(
+              option
+            );
+
+          }
+        );
 
 
         status.textContent =
           'Ready.';
 
+      }
 
-      } catch (error) {
+      catch (error) {
 
         console.error(
           'SUBJECT ERROR:',
@@ -659,7 +657,7 @@
 
 
         status.textContent =
-          'Could not load subjects.';
+          'Could not connect to AI Teacher server.';
 
       }
 
@@ -682,7 +680,7 @@
 
 
     /*
-     * SAFE SOURCE NAME
+     * SOURCE NAME
      */
 
     function getSourceName(source) {
@@ -718,7 +716,7 @@
 
 
     /*
-     * GET PAGE NUMBERS
+     * SOURCE PAGES
      */
 
     function getSourcePages(data) {
@@ -726,17 +724,12 @@
       let pages = [];
 
 
-      /*
-       * Case 1:
-       * sourcePages array
-       */
-
       if (
         Array.isArray(data.sourcePages)
       ) {
 
         data.sourcePages.forEach(
-          item => {
+          function (item) {
 
             if (
               item &&
@@ -747,6 +740,7 @@
                 item.page ||
                 item.pageNumber ||
                 item.number;
+
 
               if (
                 page !== undefined &&
@@ -778,11 +772,6 @@
       }
 
 
-      /*
-       * Case 2:
-       * source itself contains pages
-       */
-
       if (
         pages.length === 0 &&
         data.source &&
@@ -801,7 +790,7 @@
         ) {
 
           sourcePages.forEach(
-            page => {
+            function (page) {
 
               if (
                 page &&
@@ -812,6 +801,7 @@
                   page.page ||
                   page.pageNumber ||
                   page.number;
+
 
                 if (
                   number !== undefined &&
@@ -856,22 +846,17 @@
       }
 
 
-      /*
-       * Remove duplicate pages
-       */
-
       pages = [
         ...new Set(pages)
       ];
 
 
-      /*
-       * Sort numeric pages
-       */
-
       pages.sort(
-        (a, b) =>
-          Number(a) - Number(b)
+        function (a, b) {
+
+          return Number(a) - Number(b);
+
+        }
       );
 
 
@@ -904,54 +889,36 @@
         'source-info';
 
 
-      let html = `
+      let html =
 
-        <strong>
-          📚 Source
-        </strong>
-
-        <br>
-
-        ${sourceName}
-
-      `;
+        '<strong>📚 Source</strong>' +
+        '<br>' +
+        sourceName;
 
 
       if (
         pages.length > 0
       ) {
 
-        html += `
+        html +=
 
-          <br><br>
-
-          <strong>
-            📄 Textbook page${pages.length > 1 ? 's' : ''}
-          </strong>
-
-          <br>
-
-          ${pages.join(', ')}
-
-        `;
+          '<br><br>' +
+          '<strong>📄 Textbook page' +
+          (pages.length > 1 ? 's' : '') +
+          '</strong>' +
+          '<br>' +
+          pages.join(', ');
 
       }
 
       else {
 
-        html += `
+        html +=
 
-          <br><br>
-
-          <strong>
-            📄 Textbook page
-          </strong>
-
-          <br>
-
-          Page information not available
-
-        `;
+          '<br><br>' +
+          '<strong>📄 Textbook page</strong>' +
+          '<br>' +
+          'Page information not available';
 
       }
 
@@ -975,7 +942,6 @@
       'click',
       async function () {
 
-
         const userQuestion =
           question.value.trim();
 
@@ -983,10 +949,6 @@
         selectedSubject =
           subject.value;
 
-
-        /*
-         * VALIDATION
-         */
 
         if (
           !selectedSubject
@@ -1012,10 +974,6 @@
         }
 
 
-        /*
-         * RESET
-         */
-
         answer.textContent =
           'Thinking...';
 
@@ -1034,40 +992,35 @@
 
         try {
 
-
-          /*
-           * API REQUEST
-           */
-
           const response =
             await fetch(
-              '/api/ask',
+              API_BASE + '/api/ask',
               {
 
-                method: 'POST',
+                method:
+                  'POST',
 
                 headers: {
+
                   'Content-Type':
                     'application/json'
+
                 },
 
-                body: JSON.stringify({
+                body:
+                  JSON.stringify({
 
-                  subjectId:
-                    selectedSubject,
+                    subjectId:
+                      selectedSubject,
 
-                  question:
-                    userQuestion
+                    question:
+                      userQuestion
 
-                })
+                  })
 
               }
             );
 
-
-          /*
-           * JSON RESPONSE
-           */
 
           const data =
             await response.json();
@@ -1078,10 +1031,6 @@
             data
           );
 
-
-          /*
-           * ERROR
-           */
 
           if (
             !response.ok
@@ -1096,7 +1045,7 @@
 
 
           /*
-           * ANSWER
+           * Clear previous source box
            */
 
           answer.textContent =
@@ -1105,7 +1054,7 @@
 
 
           /*
-           * SOURCE + PAGE
+           * Add source + pages
            */
 
           displaySourceInfo(
@@ -1116,11 +1065,9 @@
           status.textContent =
             'Done.';
 
-
         }
 
         catch (error) {
-
 
           console.error(
             'ASK ERROR:',
@@ -1134,13 +1081,11 @@
 
 
           status.textContent =
-            '';
+            'Could not connect to AI Teacher server.';
 
         }
 
-
         finally {
-
 
           ask.disabled =
             false;
@@ -1185,5 +1130,4 @@
   </script>
 
 </body>
-</html>
-```
+</html>s
