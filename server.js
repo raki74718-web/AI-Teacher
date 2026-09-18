@@ -1,67 +1,43 @@
-```js
 require("dotenv").config();
 
 const express = require("express");
-const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
 const crypto = require("crypto");
+const pdfParse = require("pdf-parse");
 
 const { createClient } = require("@supabase/supabase-js");
 const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
-const PORT = process.env.PORT || 3000;
-
-
-/* =========================================================
-   CORS
-========================================================= */
-
-app.use(
-  cors({
-    origin: [
-      "https://aiteachers.in",
-      "https://www.aiteachers.in",
-      "http://localhost:3000",
-      "http://localhost:10000"
-    ],
-    methods: ["GET", "POST", "DELETE", "OPTIONS"],
-    allowedHeaders: [
-      "Content-Type",
-      "Authorization",
-      "x-admin-token"
-    ]
-  })
-);
+app.use(express.json({ limit: "10mb" }));
+app.use(express.urlencoded({ extended: true }));
 
 
 /* =========================================================
    ENVIRONMENT
 ========================================================= */
 
+const PORT = process.env.PORT || 3000;
+
 const ADMIN_PASSWORD =
-  process.env.ADMIN_PASSWORD || "";
+  process.env.ADMIN_PASSWORD;
 
-const GEMINI_API_KEY =
-  process.env.AI_API_KEY || "";
+const AI_API_KEY =
+  process.env.AI_API_KEY;
 
-const GEMINI_MODEL =
+const AI_MODEL =
   process.env.AI_MODEL ||
   "gemini-3.6-flash";
 
 const SUPABASE_URL =
-  process.env.SUPABASE_URL || "";
+  process.env.SUPABASE_URL;
 
 const SUPABASE_SECRET_KEY =
-  process.env.SUPABASE_SECRET_KEY || "";
+  process.env.SUPABASE_SECRET_KEY;
 
-
-/* =========================================================
-   ENV CHECK
-========================================================= */
 
 console.log(
   "ADMIN_PASSWORD loaded:",
@@ -70,12 +46,12 @@ console.log(
 
 console.log(
   "GEMINI_API_KEY loaded:",
-  GEMINI_API_KEY ? "YES" : "NO"
+  AI_API_KEY ? "YES" : "NO"
 );
 
 console.log(
   "GEMINI_MODEL:",
-  GEMINI_MODEL
+  AI_MODEL
 );
 
 console.log(
@@ -93,49 +69,62 @@ console.log(
    SUPABASE
 ========================================================= */
 
-const supabase = createClient(
-  SUPABASE_URL,
-  SUPABASE_SECRET_KEY
-);
+if (
+  !SUPABASE_URL ||
+  !SUPABASE_SECRET_KEY
+) {
+  console.error(
+    "Supabase environment variables are missing."
+  );
+}
 
-const STORAGE_BUCKET = "books";
+const supabase =
+  createClient(
+    SUPABASE_URL,
+    SUPABASE_SECRET_KEY
+  );
 
 
 /* =========================================================
    GEMINI
 ========================================================= */
 
+if (!AI_API_KEY) {
+  console.error(
+    "AI_API_KEY is missing."
+  );
+}
+
 const genAI =
   new GoogleGenerativeAI(
-    GEMINI_API_KEY
+    AI_API_KEY
   );
 
 
 /* =========================================================
-   EXPRESS
+   PUBLIC FOLDER
 ========================================================= */
 
-app.use(
-  express.json({
-    limit: "10mb"
-  })
-);
+const publicPath =
+  path.join(__dirname, "public");
 
 app.use(
-  express.urlencoded({
-    extended: true,
-    limit: "10mb"
-  })
+  express.static(publicPath)
 );
 
-app.use(
-  express.static(
-    path.join(
-      __dirname,
-      "public"
-    )
-  )
-);
+
+/* =========================================================
+   TEMP FOLDER
+========================================================= */
+
+const tempPath =
+  path.join(__dirname, "tmp");
+
+if (!fs.existsSync(tempPath)) {
+  fs.mkdirSync(tempPath, {
+    recursive: true
+  });
+}
 
 
 /* =========================================================
@@ -146,100 +135,54 @@ const adminTokens =
   new Set();
 
 
-function createAdminToken() {
-
-  return crypto
-    .randomBytes(32)
-    .toString("hex");
-
-}
-
-
-function checkAdminToken(req) {
-
-  const token =
-    req.headers["x-admin-token"];
-
-  if (!token) {
-    return false;
-  }
-
-  return adminTokens.has(token);
-
-}
-
-
-/* =========================================================
-   TEMP DIRECTORY
-========================================================= */
-
-const tmpDir =
-  path.join(
-    __dirname,
-    "tmp"
-  );
-
-
-if (!fs.existsSync(tmpDir)) {
-
-  fs.mkdirSync(
-    tmpDir,
-    {
-      recursive: true
-    }
-  );
-
-}
-
-
 /* =========================================================
    MULTER
+   100 MB PDF LIMIT
 ========================================================= */
-
-const storage =
-  multer.diskStorage({
-
-    destination: function (
-      req,
-      file,
-      cb
-    ) {
-
-      cb(
-        null,
-        tmpDir
-      );
-
-    },
-
-    filename: function (
-      req,
-      file,
-      cb
-    ) {
-
-      const uniqueName =
-        Date.now() +
-        "-" +
-        crypto
-          .randomBytes(6)
-          .toString("hex") +
-        ".pdf";
-
-      cb(
-        null,
-        uniqueName
-      );
-
-    }
-
-  });
-
 
 const upload =
   multer({
 
-    storage,
+    storage:
+      multer.diskStorage({
+
+        destination:
+          function (
+            req,
+            file,
+            cb
+          ) {
+
+            cb(
+              null,
+              tempPath
+            );
+
+          },
+
+        filename:
+          function (
+            req,
+            file,
+            cb
+          ) {
+
+            const unique =
+              Date.now() +
+              "-" +
+              crypto
+                .randomBytes(6)
+                .toString("hex");
+
+            cb(
+              null,
+              unique +
+              ".pdf"
+            );
+
+          }
+
+      }),
 
     limits: {
 
@@ -287,56 +230,13 @@ const upload =
 
 function cleanText(text) {
 
-  if (!text) {
-    return "";
-  }
-
-  return String(text)
-
-    .replace(
-      /\r\n/g,
-      "\n"
-    )
-
-    .replace(
-      /\r/g,
-      "\n"
-    )
-
-    .replace(
-      /[ \t]+/g,
-      " "
-    )
-
-    .replace(
-      /\n{3,}/g,
-      "\n\n"
-    )
-
-    .trim();
-
-}
-
-
-/* =========================================================
-   QUESTION NORMALIZATION
-========================================================= */
-
-function normalizeQuestion(text) {
-
   return String(text || "")
 
-    .toLowerCase()
+    .replace(/\r/g, " ")
 
-    .replace(
-      /[^a-z0-9\s]/g,
-      " "
-    )
+    .replace(/[ \t]+/g, " ")
 
-    .replace(
-      /\s+/g,
-      " "
-    )
+    .replace(/\n{3,}/g, "\n\n")
 
     .trim();
 
@@ -344,376 +244,117 @@ function normalizeQuestion(text) {
 
 
 /* =========================================================
-   KEYWORDS
+   CREATE CHUNKS
 ========================================================= */
 
-function getKeywords(question) {
+const CHUNK_SIZE = 2500;
 
-  const stopWords =
-    new Set([
+const CHUNK_OVERLAP = 300;
 
-      "what",
-      "is",
-      "are",
-      "the",
-      "a",
-      "an",
-      "of",
-      "and",
-      "or",
-      "to",
-      "in",
-      "on",
-      "for",
-      "with",
-      "from",
-      "by",
-      "explain",
-      "describe",
-      "write",
-      "about",
-      "give",
-      "me",
-      "please",
-      "how",
-      "why",
-      "can",
-      "you",
-      "its",
-      "their",
-      "this",
-      "that",
-      "using",
-      "example",
-      "examples",
-      "following",
-      "according",
-      "definition",
-      "define",
-      "show",
-      "tell",
-      "briefly",
-      "detail",
-      "detailed",
-      "marks",
-      "mark"
-
-    ]);
+const TOP_K_CHUNKS = 10;
 
 
-  return normalizeQuestion(
-    question
-  )
+function createChunks(text) {
 
-    .split(" ")
-
-    .filter(function (word) {
-
-      return (
-        word.length >= 2 &&
-        !stopWords.has(word)
-      );
-
-    });
-
-}
-
-
-/* =========================================================
-   TOPIC DETECTION
-========================================================= */
-
-function detectTopics(question) {
-
-  const q =
-    normalizeQuestion(
-      question
-    );
-
-  const topics = [];
-
-
-  const aliases = {
-
-    avl: [
-      "avl",
-      "avl tree",
-      "avl trees",
-      "balanced binary search tree"
-    ],
-
-    bst: [
-      "bst",
-      "binary search tree",
-      "binary search trees"
-    ],
-
-    stack: [
-      "stack",
-      "stacks",
-      "push",
-      "pop",
-      "peek"
-    ],
-
-    queue: [
-      "queue",
-      "queues",
-      "enqueue",
-      "dequeue"
-    ],
-
-    linkedlist: [
-      "linked list",
-      "linked lists",
-      "singly linked list",
-      "doubly linked list",
-      "circular linked list"
-    ],
-
-    tree: [
-      "tree",
-      "trees",
-      "binary tree",
-      "binary trees"
-    ],
-
-    graph: [
-      "graph",
-      "graphs",
-      "bfs",
-      "dfs"
-    ],
-
-    sorting: [
-      "sorting",
-      "sort",
-      "bubble sort",
-      "selection sort",
-      "insertion sort",
-      "merge sort",
-      "quick sort",
-      "heap sort"
-    ],
-
-    searching: [
-      "searching",
-      "search",
-      "linear search",
-      "binary search"
-    ],
-
-    array: [
-      "array",
-      "arrays"
-    ],
-
-    recursion: [
-      "recursion",
-      "recursive"
-    ],
-
-    hashing: [
-      "hash",
-      "hashing",
-      "hash table",
-      "hash tables"
-    ]
-
-  };
-
-
-  for (
-    const topic in aliases
-  ) {
-
-    for (
-      const alias of aliases[topic]
-    ) {
-
-      if (q.includes(alias)) {
-
-        topics.push(topic);
-
-        break;
-
-      }
-
-    }
-
-  }
-
-
-  return [
-    ...new Set(topics)
-  ];
-
-}
-
-
-/* =========================================================
-   CHUNK SETTINGS
-========================================================= */
-
-const CHUNK_SIZE =
-  2500;
-
-const CHUNK_OVERLAP =
-  300;
-
-const TOP_K_CHUNKS =
-  10;
-
-
-/* =========================================================
-   PAGE-AWARE CHUNK CREATION
-========================================================= */
-
-function createChunks(pageData) {
+  const cleaned =
+    cleanText(text);
 
   const chunks = [];
+
+  let start = 0;
 
   let id = 1;
 
 
-  if (
-    typeof pageData ===
-    "string"
+  while (
+    start < cleaned.length
   ) {
 
-    pageData = [
-      {
-        page: 1,
-        text: pageData
+    let end =
+      start +
+      CHUNK_SIZE;
+
+
+    if (
+      end <
+      cleaned.length
+    ) {
+
+      const paragraphBreak =
+        cleaned.lastIndexOf(
+          "\n",
+          end
+        );
+
+      const sentenceBreak =
+        cleaned.lastIndexOf(
+          ". ",
+          end
+        );
+
+
+      if (
+        paragraphBreak >
+        start + 1000
+      ) {
+
+        end =
+          paragraphBreak;
+
+      } else if (
+        sentenceBreak >
+        start + 1000
+      ) {
+
+        end =
+          sentenceBreak + 1;
+
       }
-    ];
 
-  }
-
-
-  for (
-    const page of pageData
-  ) {
-
-    const pageNumber =
-      Number(
-        page.page || 1
-      );
-
-    const cleaned =
-      cleanText(
-        page.text
-      );
-
-
-    if (!cleaned) {
-      continue;
     }
 
 
-    let start = 0;
+    const chunkText =
+      cleaned
+        .slice(
+          start,
+          end
+        )
+        .trim();
 
 
-    while (
-      start < cleaned.length
+    if (chunkText) {
+
+      chunks.push({
+
+        id,
+
+        text:
+          chunkText
+
+      });
+
+      id++;
+
+    }
+
+
+    const nextStart =
+      end -
+      CHUNK_OVERLAP;
+
+
+    if (
+      nextStart <= start
     ) {
 
-      let end =
-        start +
-        CHUNK_SIZE;
+      start =
+        end;
 
+    } else {
 
-      if (
-        end <
-        cleaned.length
-      ) {
-
-        const paragraphBreak =
-          cleaned.lastIndexOf(
-            "\n",
-            end
-          );
-
-        const sentenceBreak =
-          cleaned.lastIndexOf(
-            ". ",
-            end
-          );
-
-
-        if (
-          paragraphBreak >
-          start + 1000
-        ) {
-
-          end =
-            paragraphBreak;
-
-        }
-
-        else if (
-          sentenceBreak >
-          start + 1000
-        ) {
-
-          end =
-            sentenceBreak + 1;
-
-        }
-
-      }
-
-
-      const chunkText =
-        cleaned
-          .slice(
-            start,
-            end
-          )
-          .trim();
-
-
-      if (chunkText) {
-
-        chunks.push({
-
-          id:
-            id,
-
-          page:
-            pageNumber,
-
-          text:
-            chunkText
-
-        });
-
-        id++;
-
-      }
-
-
-      const nextStart =
-        end -
-        CHUNK_OVERLAP;
-
-
-      if (
-        nextStart <=
-        start
-      ) {
-
-        start =
-          end;
-
-      }
-
-      else {
-
-        start =
-          nextStart;
-
-      }
+      start =
+        nextStart;
 
     }
 
@@ -726,551 +367,22 @@ function createChunks(pageData) {
 
 
 /* =========================================================
-   TRUE PDF PAGE-BY-PAGE EXTRACTION
+   NORMALIZE QUESTION
 ========================================================= */
 
-async function extractPdfText(
-  filePath
-) {
-
-  console.log(
-    "PDF buffer loaded."
-  );
-
-
-  const buffer =
-    fs.readFileSync(
-      filePath
-    );
-
-
-  const pdfjsLib =
-    await import(
-      "pdfjs-dist/legacy/build/pdf.mjs"
-    );
-
-
-  const loadingTask =
-    pdfjsLib.getDocument({
-
-      data:
-        new Uint8Array(
-          buffer
-        ),
-
-      useWorkerFetch:
-        false,
-
-      isEvalSupported:
-        true
-
-    });
-
-
-  const pdf =
-    await loadingTask.promise;
-
-
-  const totalPages =
-    pdf.numPages;
-
-
-  console.log(
-    "Pages:",
-    totalPages
-  );
-
-
-  const pageData = [];
-
-
-  for (
-    let pageNumber = 1;
-    pageNumber <= totalPages;
-    pageNumber++
-  ) {
-
-    const page =
-      await pdf.getPage(
-        pageNumber
-      );
-
-
-    const textContent =
-      await page.getTextContent();
-
-
-    let pageText = "";
-
-
-    for (
-      const item of
-      textContent.items
-    ) {
-
-      if (
-        item &&
-        typeof item.str ===
-        "string"
-      ) {
-
-        pageText +=
-          item.str;
-
-
-        if (
-          item.hasEOL
-        ) {
-
-          pageText +=
-            "\n";
-
-        }
-
-        else {
-
-          pageText +=
-            " ";
-
-        }
-
-      }
-
-    }
-
-
-    pageText =
-      cleanText(
-        pageText
-      );
-
-
-    pageData.push({
-
-      page:
-        pageNumber,
-
-      text:
-        pageText
-
-    });
-
-
-    console.log(
-      "Page",
-      pageNumber,
-      "characters:",
-      pageText.length
-    );
-
-  }
-
-
-  const combinedText =
-    pageData
-
-      .map(function (page) {
-
-        return page.text;
-
-      })
-
-      .filter(function (text) {
-
-        return text.length > 0;
-
-      })
-
-      .join(
-        "\n\n"
-      );
-
-
-  console.log(
-    "Characters:",
-    combinedText.length
-  );
-
-
-  const readablePages =
-    pageData.filter(function (page) {
-
-      return page.text.length > 0;
-
-    });
-
-
-  console.log(
-    "Readable pages:",
-    readablePages.length
-  );
-
-
-  return {
-
-    text:
-      combinedText,
-
-    pages:
-      totalPages,
-
-    pageData:
-      pageData
-
-  };
+function normalizeQuestion(text) {
+
+  return String(text || "")
+    .toLowerCase()
+    .replace(/[^\w\s]/g, " ")
+    .replace(/\s+/g, " ")
+    .trim();
 
 }
 
 
 /* =========================================================
-   SUPABASE TEXT UPLOAD
-========================================================= */
-
-async function uploadTextFile(
-  filePath,
-  content
-) {
-
-  const buffer =
-    Buffer.from(
-      content,
-      "utf8"
-    );
-
-
-  const {
-    error
-  } =
-    await supabase
-      .storage
-      .from(
-        STORAGE_BUCKET
-      )
-      .upload(
-        filePath,
-        buffer,
-        {
-
-          contentType:
-            "text/plain",
-
-          upsert:
-            true
-
-        }
-      );
-
-
-  if (error) {
-
-    throw error;
-
-  }
-
-}
-
-
-/* =========================================================
-   SUPABASE JSON UPLOAD
-========================================================= */
-
-async function uploadJsonFile(
-  filePath,
-  data
-) {
-
-  const buffer =
-    Buffer.from(
-      JSON.stringify(data),
-      "utf8"
-    );
-
-
-  const {
-    error
-  } =
-    await supabase
-      .storage
-      .from(
-        STORAGE_BUCKET
-      )
-      .upload(
-        filePath,
-        buffer,
-        {
-
-          contentType:
-            "application/json",
-
-          upsert:
-            true
-
-        }
-      );
-
-
-  if (error) {
-
-    throw error;
-
-  }
-
-}
-
-
-/* =========================================================
-   SUPABASE DOWNLOAD TEXT
-========================================================= */
-
-async function downloadTextFile(
-  filePath
-) {
-
-  const {
-    data,
-    error
-  } =
-    await supabase
-      .storage
-      .from(
-        STORAGE_BUCKET
-      )
-      .download(
-        filePath
-      );
-
-
-  if (error) {
-
-    throw error;
-
-  }
-
-
-  if (!data) {
-
-    throw new Error(
-      "Textbook file not found."
-    );
-
-  }
-
-
-  const arrayBuffer =
-    await data.arrayBuffer();
-
-
-  return Buffer
-    .from(
-      arrayBuffer
-    )
-    .toString(
-      "utf8"
-    );
-
-}
-
-
-/* =========================================================
-   SUPABASE DOWNLOAD JSON
-========================================================= */
-
-async function downloadJsonFile(
-  filePath
-) {
-
-  const {
-    data,
-    error
-  } =
-    await supabase
-      .storage
-      .from(
-        STORAGE_BUCKET
-      )
-      .download(
-        filePath
-      );
-
-
-  if (error) {
-
-    throw error;
-
-  }
-
-
-  if (!data) {
-
-    throw new Error(
-      "Textbook chunks file not found."
-    );
-
-  }
-
-
-  const arrayBuffer =
-    await data.arrayBuffer();
-
-
-  const text =
-    Buffer
-      .from(
-        arrayBuffer
-      )
-      .toString(
-        "utf8"
-      );
-
-
-  return JSON.parse(
-    text
-  );
-
-}
-
-
-/* =========================================================
-   TOPIC MATCH HELPER
-========================================================= */
-
-function topicMatchesText(
-  topic,
-  text
-) {
-
-  if (topic === "avl") {
-
-    return (
-      text.includes("avl") ||
-      text.includes("rotation") ||
-      text.includes("balance")
-    );
-
-  }
-
-
-  if (topic === "bst") {
-
-    return (
-      text.includes(
-        "binary search tree"
-      ) ||
-      text.includes("bst")
-    );
-
-  }
-
-
-  if (topic === "stack") {
-
-    return (
-      text.includes("stack") ||
-      text.includes("push") ||
-      text.includes("pop")
-    );
-
-  }
-
-
-  if (topic === "queue") {
-
-    return (
-      text.includes("queue") ||
-      text.includes("enqueue") ||
-      text.includes("dequeue")
-    );
-
-  }
-
-
-  if (topic === "linkedlist") {
-
-    return text.includes(
-      "linked list"
-    );
-
-  }
-
-
-  if (topic === "tree") {
-
-    return text.includes(
-      "tree"
-    );
-
-  }
-
-
-  if (topic === "graph") {
-
-    return (
-      text.includes("graph") ||
-      text.includes("bfs") ||
-      text.includes("dfs")
-    );
-
-  }
-
-
-  if (topic === "sorting") {
-
-    return (
-      text.includes("sort") ||
-      text.includes("sorting")
-    );
-
-  }
-
-
-  if (topic === "searching") {
-
-    return (
-      text.includes("search") ||
-      text.includes("searching")
-    );
-
-  }
-
-
-  if (topic === "array") {
-
-    return text.includes(
-      "array"
-    );
-
-  }
-
-
-  if (topic === "recursion") {
-
-    return (
-      text.includes("recursion") ||
-      text.includes("recursive")
-    );
-
-  }
-
-
-  if (topic === "hashing") {
-
-    return (
-      text.includes("hash") ||
-      text.includes("hashing")
-    );
-
-  }
-
-
-  return text.includes(
-    topic
-  );
-
-}
-
-
-/* =========================================================
-   RAG SEARCH
+   SEARCH CHUNKS
 ========================================================= */
 
 function searchChunks(
@@ -1294,20 +406,229 @@ function searchChunks(
     );
 
 
+  /*
+   * Topic aliases
+   */
+
+  const topicAliases = {
+
+    avl: [
+
+      "avl",
+      "avl tree",
+      "avl trees",
+      "balanced binary search tree",
+      "height balanced tree",
+      "height balanced binary search tree",
+      "rotation",
+      "rotations",
+      "ll rotation",
+      "rr rotation",
+      "lr rotation",
+      "rl rotation"
+
+    ],
+
+
+    bst: [
+
+      "bst",
+      "binary search tree",
+      "binary search trees"
+
+    ],
+
+
+    stack: [
+
+      "stack",
+      "stacks",
+      "push",
+      "pop",
+      "peek",
+      "lifo"
+
+    ],
+
+
+    queue: [
+
+      "queue",
+      "queues",
+      "enqueue",
+      "dequeue",
+      "fifo"
+
+    ],
+
+
+    linkedlist: [
+
+      "linked list",
+      "linked lists",
+      "singly linked list",
+      "doubly linked list",
+      "circular linked list"
+
+    ],
+
+
+    tree: [
+
+      "tree",
+      "trees",
+      "binary tree",
+      "binary trees"
+
+    ],
+
+
+    graph: [
+
+      "graph",
+      "graphs",
+      "bfs",
+      "dfs"
+
+    ],
+
+
+    sorting: [
+
+      "sorting",
+      "bubble sort",
+      "selection sort",
+      "insertion sort",
+      "merge sort",
+      "quick sort",
+      "heap sort"
+
+    ],
+
+
+    searching: [
+
+      "searching",
+      "linear search",
+      "binary search"
+
+    ]
+
+  };
+
+
+  /*
+   * Stop words
+   */
+
+  const stopWords =
+    new Set([
+
+      "what",
+      "is",
+      "are",
+      "the",
+      "a",
+      "an",
+      "and",
+      "or",
+      "of",
+      "to",
+      "for",
+      "in",
+      "on",
+      "with",
+      "from",
+      "explain",
+      "write",
+      "describe",
+      "define",
+      "give",
+      "me",
+      "about",
+      "its",
+      "their",
+      "this",
+      "that",
+      "how",
+      "does",
+      "do",
+      "marks",
+      "mark",
+      "please",
+      "show",
+      "tell",
+      "discuss",
+      "list",
+      "mention",
+      "types",
+      "type",
+      "example",
+      "examples",
+      "using",
+      "used"
+
+    ]);
+
+
+  /*
+   * Question keywords
+   */
+
+  const words =
+    q
+      .split(/\s+/)
+      .filter(
+        word =>
+          word.length >= 2
+      );
+
+
   const keywords =
-    getKeywords(
-      question
+    words.filter(
+      word =>
+        !stopWords.has(word)
     );
 
 
-  const topics =
-    detectTopics(
-      question
-    );
+  /*
+   * Detect topics
+   */
+
+  const topics = [];
+
+
+  for (
+    const [topic, aliases]
+    of Object.entries(
+      topicAliases
+    )
+  ) {
+
+    for (
+      const alias
+      of aliases
+    ) {
+
+      if (
+        q.includes(alias)
+      ) {
+
+        topics.push(
+          topic
+        );
+
+        break;
+
+      }
+
+    }
+
+  }
 
 
   console.log(
-    "=================================="
+    "================================================="
   );
 
   console.log(
@@ -1335,38 +656,41 @@ function searchChunks(
   );
 
 
+  /*
+   * Score every chunk
+   */
+
   const scored =
     chunks.map(
-      function (
+      (
         chunk,
         index
-      ) {
+      ) => {
 
         const text =
           normalizeQuestion(
-            chunk.text
+            chunk.text ||
+            chunk.content ||
+            ""
           );
 
 
         let score = 0;
 
 
-        if (
-          q.length > 4 &&
-          text.includes(q)
-        ) {
-
-          score += 10;
-
-        }
-
+        /*
+         * Keyword matching
+         */
 
         for (
-          const keyword of keywords
+          const keyword
+          of keywords
         ) {
 
           if (
-            text.includes(keyword)
+            text.includes(
+              keyword
+            )
           ) {
 
             score += 2;
@@ -1376,88 +700,96 @@ function searchChunks(
         }
 
 
+        /*
+         * Exact question
+         */
+
+        if (
+          q.length >= 4 &&
+          text.includes(q)
+        ) {
+
+          score += 10;
+
+        }
+
+
+        /*
+         * Topic matching
+         */
+
         for (
-          const topic of topics
+          const topic
+          of topics
+        ) {
+
+          const aliases =
+            topicAliases[
+              topic
+            ] || [];
+
+
+          for (
+            const alias
+            of aliases
+          ) {
+
+            if (
+              text.includes(alias)
+            ) {
+
+              score += 5;
+
+            }
+
+          }
+
+        }
+
+
+        /*
+         * AVL boost
+         */
+
+        if (
+          topics.includes("avl")
         ) {
 
           if (
-            topicMatchesText(
-              topic,
-              text
-            )
+            text.includes("avl")
+          ) {
+
+            score += 20;
+
+          }
+
+          if (
+            text.includes("rotation")
+          ) {
+
+            score += 10;
+
+          }
+
+          if (
+            text.includes("balance")
           ) {
 
             score += 6;
 
           }
 
-
           if (
-            topic === "avl"
+            text.includes("height")
           ) {
 
-            if (
-              text.includes("avl")
-            ) {
-
-              score += 8;
-
-            }
-
-            if (
-              text.includes("rotation")
-            ) {
-
-              score += 4;
-
-            }
-
-            if (
-              text.includes("balance")
-            ) {
-
-              score += 3;
-
-            }
+            score += 5;
 
           }
 
-
           if (
-            topic === "stack"
-          ) {
-
-            if (
-              text.includes("stack")
-            ) {
-
-              score += 7;
-
-            }
-
-            if (
-              text.includes("push")
-            ) {
-
-              score += 3;
-
-            }
-
-            if (
-              text.includes("pop")
-            ) {
-
-              score += 3;
-
-            }
-
-          }
-
-
-          if (
-            topic === "bst" &&
             text.includes(
-              "binary search tree"
+              "left rotation"
             )
           ) {
 
@@ -1465,15 +797,136 @@ function searchChunks(
 
           }
 
-
           if (
-            topic === "queue" &&
             text.includes(
-              "queue"
+              "right rotation"
             )
           ) {
 
-            score += 7;
+            score += 8;
+
+          }
+
+        }
+
+
+        /*
+         * Stack boost
+         */
+
+        if (
+          topics.includes("stack")
+        ) {
+
+          if (
+            text.includes("stack")
+          ) {
+
+            score += 15;
+
+          }
+
+          if (
+            text.includes("push")
+          ) {
+
+            score += 6;
+
+          }
+
+          if (
+            text.includes("pop")
+          ) {
+
+            score += 6;
+
+          }
+
+          if (
+            text.includes("peek")
+          ) {
+
+            score += 5;
+
+          }
+
+          if (
+            text.includes("lifo")
+          ) {
+
+            score += 5;
+
+          }
+
+        }
+
+
+        /*
+         * BST boost
+         */
+
+        if (
+          topics.includes("bst")
+        ) {
+
+          if (
+            text.includes("bst")
+          ) {
+
+            score += 15;
+
+          }
+
+          if (
+            text.includes(
+              "binary search tree"
+            )
+          ) {
+
+            score += 15;
+
+          }
+
+        }
+
+
+        /*
+         * Queue boost
+         */
+
+        if (
+          topics.includes("queue")
+        ) {
+
+          if (
+            text.includes("queue")
+          ) {
+
+            score += 15;
+
+          }
+
+          if (
+            text.includes("enqueue")
+          ) {
+
+            score += 6;
+
+          }
+
+          if (
+            text.includes("dequeue")
+          ) {
+
+            score += 6;
+
+          }
+
+          if (
+            text.includes("fifo")
+          ) {
+
+            score += 5;
 
           }
 
@@ -1482,24 +935,9 @@ function searchChunks(
 
         return {
 
-          index:
-            index,
-
-          id:
-            Number(
-              chunk.id
-            ),
-
-          page:
-            Number(
-              chunk.page || 1
-            ),
-
-          text:
-            chunk.text,
-
-          score:
-            score
+          chunk,
+          index,
+          score
 
         };
 
@@ -1507,308 +945,475 @@ function searchChunks(
     );
 
 
-  let relevant =
+  /*
+   * Highest score first
+   */
+
+  scored.sort(
+    (a, b) =>
+      b.score -
+      a.score
+  );
+
+
+  /*
+   * Normal matches
+   */
+
+  let selected =
     scored
+      .filter(
+        item =>
+          item.score > 0
+      )
+      .slice(
+        0,
+        TOP_K_CHUNKS
+      );
 
-      .filter(function (item) {
 
-        return item.score > 0;
-
-      })
-
-      .sort(function (
-        a,
-        b
-      ) {
-
-        return b.score -
-          a.score;
-
-      });
-
+  /*
+   * Topic fallback
+   */
 
   if (
-    relevant.length === 0 &&
+    selected.length === 0 &&
     topics.length > 0
   ) {
 
-    relevant =
-      scored
+    console.log(
+      "No normal matches."
+    );
 
-        .filter(function (item) {
-
-          const text =
-            normalizeQuestion(
-              item.text
-            );
+    console.log(
+      "Trying topic fallback..."
+    );
 
 
-          return topics.some(
-            function (topic) {
+    const aliases = [];
 
-              return topicMatchesText(
-                topic,
-                text
+
+    for (
+      const topic
+      of topics
+    ) {
+
+      aliases.push(
+        ...(
+          topicAliases[
+            topic
+          ] || []
+        )
+      );
+
+    }
+
+
+    selected =
+      chunks
+        .map(
+          (
+            chunk,
+            index
+          ) => {
+
+            const text =
+              normalizeQuestion(
+                chunk.text ||
+                chunk.content ||
+                ""
               );
 
+
+            let score = 0;
+
+
+            for (
+              const alias
+              of aliases
+            ) {
+
+              if (
+                text.includes(alias)
+              ) {
+
+                score++;
+
+              }
+
             }
-          );
 
-        })
 
-        .sort(function (
-          a,
-          b
-        ) {
+            return {
 
-          return b.score -
-            a.score;
+              chunk,
+              index,
+              score
 
-        });
+            };
+
+          }
+        )
+        .filter(
+          item =>
+            item.score > 0
+        )
+        .sort(
+          (a, b) =>
+            b.score -
+            a.score
+        )
+        .slice(
+          0,
+          TOP_K_CHUNKS
+        );
 
   }
 
 
-  relevant =
-    relevant.slice(
-      0,
-      TOP_K_CHUNKS
+  /*
+   * Add neighbouring chunks
+   */
+
+  const finalIndexes =
+    new Set();
+
+
+  for (
+    const item
+    of selected
+  ) {
+
+    finalIndexes.add(
+      item.index
     );
+
+
+    if (
+      item.index > 0
+    ) {
+
+      finalIndexes.add(
+        item.index - 1
+      );
+
+    }
+
+
+    if (
+      item.index <
+      chunks.length - 1
+    ) {
+
+      finalIndexes.add(
+        item.index + 1
+      );
+
+    }
+
+  }
+
+
+  const results =
+    Array.from(
+      finalIndexes
+    )
+      .sort(
+        (a, b) =>
+          a - b
+      )
+      .map(
+        index =>
+          chunks[index]
+      )
+      .slice(
+        0,
+        TOP_K_CHUNKS + 4
+      );
 
 
   console.log(
     "Relevant chunks:",
-    relevant.length
+    results.length
   );
 
 
-  console.log(
-    "Top matches:",
-    relevant.map(
-      function (item) {
-
-        return (
-          "ID:" +
-          item.id +
-          " Page:" +
-          item.page +
-          " Score:" +
-          item.score
-        );
-
-      }
-    )
-  );
-
-
-  const finalMap =
-    new Map();
-
-
-  for (
-    const item of relevant
+  if (
+    selected.length > 0
   ) {
 
-    finalMap.set(
-      item.id,
-      item
+    console.log(
+      "Top matches:",
+      selected
+        .slice(0, 5)
+        .map(
+          item =>
+            `${item.index}(score:${item.score})`
+        )
+        .join(", ")
     );
-
-
-    const previous =
-      chunks.find(
-        function (chunk) {
-
-          return (
-            Number(
-              chunk.id
-            ) ===
-            item.id - 1
-          );
-
-        }
-      );
-
-
-    const next =
-      chunks.find(
-        function (chunk) {
-
-          return (
-            Number(
-              chunk.id
-            ) ===
-            item.id + 1
-          );
-
-        }
-      );
-
-
-    if (previous) {
-
-      finalMap.set(
-        Number(
-          previous.id
-        ),
-        {
-
-          ...previous,
-
-          id:
-            Number(
-              previous.id
-            ),
-
-          page:
-            Number(
-              previous.page || 1
-            ),
-
-          score:
-            Math.max(
-              1,
-              item.score - 1
-            )
-
-        }
-      );
-
-    }
-
-
-    if (next) {
-
-      finalMap.set(
-        Number(
-          next.id
-        ),
-        {
-
-          ...next,
-
-          id:
-            Number(
-              next.id
-            ),
-
-          page:
-            Number(
-              next.page || 1
-            ),
-
-          score:
-            Math.max(
-              1,
-              item.score - 1
-            )
-
-        }
-      );
-
-    }
 
   }
 
 
-  return Array
-    .from(
-      finalMap.values()
-    )
+  console.log(
+    "================================================="
+  );
 
-    .sort(function (
-      a,
-      b
-    ) {
 
-      return b.score -
-        a.score;
-
-    })
-
-    .slice(
-      0,
-      TOP_K_CHUNKS
-    );
+  return results;
 
 }
 
 
 /* =========================================================
-   ADMIN LOGIN
+   SUPABASE STORAGE
+========================================================= */
+
+const STORAGE_BUCKET =
+  "books";
+
+
+async function uploadTextFile(
+  filePath,
+  content
+) {
+
+  const buffer =
+    Buffer.from(
+      content,
+      "utf8"
+    );
+
+
+  const { error } =
+    await supabase
+      .storage
+      .from(
+        STORAGE_BUCKET
+      )
+      .upload(
+        filePath,
+        buffer,
+        {
+          contentType:
+            "text/plain",
+          upsert:
+            true
+        }
+      );
+
+
+  if (error) {
+    throw error;
+  }
+
+}
+
+
+async function uploadJsonFile(
+  filePath,
+  data
+) {
+
+  const buffer =
+    Buffer.from(
+      JSON.stringify(
+        data
+      ),
+      "utf8"
+    );
+
+
+  const { error } =
+    await supabase
+      .storage
+      .from(
+        STORAGE_BUCKET
+      )
+      .upload(
+        filePath,
+        buffer,
+        {
+          contentType:
+            "application/json",
+          upsert:
+            true
+        }
+      );
+
+
+  if (error) {
+    throw error;
+  }
+
+}
+
+
+async function downloadJsonFile(
+  filePath
+) {
+
+  const { data, error } =
+    await supabase
+      .storage
+      .from(
+        STORAGE_BUCKET
+      )
+      .download(
+        filePath
+      );
+
+
+  if (error) {
+    throw error;
+  }
+
+
+  const text =
+    await data.text();
+
+
+  return JSON.parse(
+    text
+  );
+
+}
+
+
+/* =========================================================
+   PDF EXTRACTION
+========================================================= */
+
+async function extractPdfText(
+  filePath
+) {
+
+  const buffer =
+    fs.readFileSync(
+      filePath
+    );
+
+
+  console.log(
+    "PDF buffer loaded."
+  );
+
+
+  const result =
+    await pdfParse(
+      buffer
+    );
+
+
+  const text =
+    cleanText(
+      result.text
+    );
+
+
+  console.log(
+    "Pages:",
+    result.numpages
+  );
+
+  console.log(
+    "Characters:",
+    text.length
+  );
+
+
+  return {
+
+    text,
+
+    pages:
+      result.numpages
+
+  };
+
+}
+
+
+/* =========================================================
+   ADMIN AUTH
+========================================================= */
+
+function adminAuth(
+  req,
+  res,
+  next
+) {
+
+  const token =
+    req.headers[
+      "x-admin-token"
+    ];
+
+
+  if (
+    !token ||
+    !adminTokens.has(token)
+  ) {
+
+    return res
+      .status(401)
+      .json({
+        error:
+          "Unauthorized"
+      });
+
+  }
+
+
+  next();
+
+}
+
+
+/* =========================================================
+   LOGIN
 ========================================================= */
 
 app.post(
   "/api/admin/login",
-  function (
-    req,
-    res
-  ) {
+  (req, res) => {
 
-    try {
-
-      const password =
-        req.body &&
-        req.body.password;
+    const password =
+      req.body &&
+      req.body.password;
 
 
-      if (
-        !password ||
-        password !==
+    if (
+      !ADMIN_PASSWORD ||
+      password !==
         ADMIN_PASSWORD
-      ) {
-
-        return res
-          .status(401)
-          .json({
-
-            error:
-              "Invalid admin password."
-
-          });
-
-      }
-
-
-      const token =
-        createAdminToken();
-
-
-      adminTokens.add(
-        token
-      );
-
-
-      return res.json({
-
-        success:
-          true,
-
-        token:
-          token
-
-      });
-
-    }
-
-    catch (error) {
-
-      console.error(
-        "ADMIN LOGIN ERROR:",
-        error
-      );
-
+    ) {
 
       return res
-        .status(500)
+        .status(401)
         .json({
-
           error:
-            "Admin login failed."
-
+            "Invalid password"
         });
 
     }
+
+
+    const token =
+      crypto
+        .randomBytes(32)
+        .toString("hex");
+
+
+    adminTokens.add(
+      token
+    );
+
+
+    res.json({
+      token
+    });
 
   }
 );
@@ -1820,58 +1425,51 @@ app.post(
 
 app.get(
   "/api/subjects",
-  async function (
+  async (
     req,
     res
-  ) {
+  ) => {
 
     try {
 
-      const {
-        data,
-        error
-      } =
+      const { data, error } =
         await supabase
           .from("subjects")
-          .select("*")
+          .select(
+            "id,name,pages,characters"
+          )
           .order(
-            "name",
+            "created_at",
             {
               ascending:
-                true
+                false
             }
           );
 
 
       if (error) {
-
         throw error;
-
       }
 
 
-      return res.json(
+      res.json(
         data || []
       );
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
-        "GET SUBJECTS ERROR:",
+        "SUBJECTS ERROR:",
         error
       );
 
 
-      return res
+      res
         .status(500)
         .json({
-
           error:
-            error.message ||
             "Could not load subjects."
-
         });
 
     }
@@ -1886,74 +1484,50 @@ app.get(
 
 app.get(
   "/api/admin/subjects",
-  async function (
+  adminAuth,
+  async (
     req,
     res
-  ) {
+  ) => {
 
     try {
 
-      if (
-        !checkAdminToken(req)
-      ) {
-
-        return res
-          .status(401)
-          .json({
-
-            error:
-              "Unauthorized."
-
-          });
-
-      }
-
-
-      const {
-        data,
-        error
-      } =
+      const { data, error } =
         await supabase
           .from("subjects")
           .select("*")
           .order(
-            "name",
+            "created_at",
             {
               ascending:
-                true
+                false
             }
           );
 
 
       if (error) {
-
         throw error;
-
       }
 
 
-      return res.json(
+      res.json(
         data || []
       );
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
-        "ADMIN SUBJECTS ERROR:",
+        "ADMIN SUBJECT ERROR:",
         error
       );
 
 
-      return res
+      res
         .status(500)
         .json({
-
           error:
-            error.message ||
             "Could not load subjects."
-
         });
 
     }
@@ -1963,16 +1537,17 @@ app.get(
 
 
 /* =========================================================
-   ADMIN PDF UPLOAD
+   UPLOAD PDF
 ========================================================= */
 
 app.post(
   "/api/admin/upload",
+  adminAuth,
   upload.single("book"),
-  async function (
+  async (
     req,
     res
-  ) {
+  ) => {
 
     let uploadedFile =
       null;
@@ -1980,38 +1555,20 @@ app.post(
 
     try {
 
-      if (
-        !checkAdminToken(req)
-      ) {
+      if (!req.file) {
 
         return res
-          .status(401)
+          .status(400)
           .json({
-
             error:
-              "Unauthorized."
-
+              "Please upload a PDF file."
           });
 
       }
 
 
       uploadedFile =
-        req.file;
-
-
-      if (!uploadedFile) {
-
-        return res
-          .status(400)
-          .json({
-
-            error:
-              "Please upload a PDF."
-
-          });
-
-      }
+        req.file.path;
 
 
       const subjectName =
@@ -2026,10 +1583,8 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
               "Subject name is required."
-
           });
 
       }
@@ -2045,12 +1600,12 @@ app.post(
 
       console.log(
         "File:",
-        uploadedFile.originalname
+        req.file.originalname
       );
 
       console.log(
         "Size:",
-        uploadedFile.size,
+        req.file.size,
         "bytes"
       );
 
@@ -2059,9 +1614,13 @@ app.post(
       );
 
 
+      /*
+       * Extract text
+       */
+
       const extracted =
         await extractPdfText(
-          uploadedFile.path
+          uploadedFile
         );
 
 
@@ -2073,14 +1632,16 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
-              "Could not extract readable text from this PDF. If this is a scanned PDF, OCR processing is required."
-
+              "Could not extract readable text from this PDF."
           });
 
       }
 
+
+      /*
+       * Create chunks
+       */
 
       console.log(
         "Creating chunks..."
@@ -2089,7 +1650,7 @@ app.post(
 
       const chunks =
         createChunks(
-          extracted.pageData
+          extracted.text
         );
 
 
@@ -2106,44 +1667,16 @@ app.post(
         return res
           .status(400)
           .json({
-
             error:
               "No readable content found in PDF."
-
           });
 
       }
 
 
-      const chunkPages =
-        [
-          ...new Set(
-            chunks.map(
-              function (chunk) {
-
-                return Number(
-                  chunk.page
-                );
-
-              }
-            )
-          )
-        ]
-          .sort(function (
-            a,
-            b
-          ) {
-
-            return a - b;
-
-          });
-
-
-      console.log(
-        "Chunk pages:",
-        chunkPages.join(", ")
-      );
-
+      /*
+       * Create subject ID
+       */
 
       const subjectId =
         crypto
@@ -2151,17 +1684,26 @@ app.post(
           .toString("hex");
 
 
-      const textPath =
-        "books/" +
-        subjectId +
-        "/book.txt";
+      /*
+       * Storage paths
+       *
+       * IMPORTANT:
+       * Original PDF is NOT uploaded.
+       *
+       * This avoids Supabase Free Plan
+       * 50 MB file-size limitation.
+       */
 
+      const textPath =
+        `books/${subjectId}/book.txt`;
 
       const chunksPath =
-        "books/" +
-        subjectId +
-        "/chunks.json";
+        `books/${subjectId}/chunks.json`;
 
+
+      /*
+       * Upload extracted text
+       */
 
       console.log(
         "Uploading book text..."
@@ -2174,6 +1716,10 @@ app.post(
       );
 
 
+      /*
+       * Upload chunks
+       */
+
       console.log(
         "Uploading chunks..."
       );
@@ -2185,36 +1731,40 @@ app.post(
       );
 
 
-      const {
-        error:
-          subjectError
-      } =
-        await supabase
-          .from("subjects")
-          .insert({
+      /*
+       * Insert subject metadata
+       */
 
-            id:
-              subjectId,
+      const { error:
+        subjectError
+      } = await supabase
+        .from("subjects")
+        .insert({
 
-            name:
-              subjectName,
+          id:
+            subjectId,
 
-            pages:
-              extracted.pages,
+          name:
+            subjectName,
 
-            characters:
-              extracted.text.length,
+          pages:
+            extracted.pages,
 
-            text_path:
-              textPath,
+          characters:
+            extracted.text.length,
 
-            chunks_path:
-              chunksPath
+          text_path:
+            textPath,
 
-          });
+          chunks_path:
+            chunksPath
+
+        });
 
 
-      if (subjectError) {
+      if (
+        subjectError
+      ) {
 
         throw subjectError;
 
@@ -2227,31 +1777,13 @@ app.post(
       );
 
 
-      try {
-
-        fs.unlinkSync(
-          uploadedFile.path
-        );
-
-      }
-
-      catch (cleanupError) {
-
-        console.log(
-          "Temporary PDF cleanup warning:",
-          cleanupError.message
-        );
-
-      }
-
-
-      return res.json({
+      res.json({
 
         success:
           true,
 
-        subjectId:
-          subjectId,
+        message:
+          "PDF processed successfully.",
 
         subject: {
 
@@ -2268,21 +1800,14 @@ app.post(
             extracted.text.length,
 
           chunks:
-            chunks.length,
-
-          text_path:
-            textPath,
-
-          chunks_path:
-            chunksPath
+            chunks.length
 
         }
 
       });
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
         "BOOK UPLOAD ERROR:",
@@ -2290,25 +1815,7 @@ app.post(
       );
 
 
-      if (
-        uploadedFile &&
-        uploadedFile.path
-      ) {
-
-        try {
-
-          fs.unlinkSync(
-            uploadedFile.path
-          );
-
-        }
-
-        catch (cleanupError) {}
-
-      }
-
-
-      return res
+      res
         .status(500)
         .json({
 
@@ -2317,6 +1824,39 @@ app.post(
             "Could not process the PDF."
 
         });
+
+
+    } finally {
+
+      /*
+       * Delete temporary PDF
+       */
+
+      if (
+        uploadedFile &&
+        fs.existsSync(
+          uploadedFile
+        )
+      ) {
+
+        try {
+
+          fs.unlinkSync(
+            uploadedFile
+          );
+
+        } catch (
+          deleteError
+        ) {
+
+          console.error(
+            "Temp PDF delete error:",
+            deleteError
+          );
+
+        }
+
+      }
 
     }
 
@@ -2330,10 +1870,10 @@ app.post(
 
 app.post(
   "/api/ask",
-  async function (
+  async (
     req,
     res
-  ) {
+  ) => {
 
     try {
 
@@ -2351,6 +1891,30 @@ app.post(
         ).trim();
 
 
+      if (!subjectId) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Subject is required."
+          });
+
+      }
+
+
+      if (!question) {
+
+        return res
+          .status(400)
+          .json({
+            error:
+              "Question is required."
+          });
+
+      }
+
+
       console.log(
         "=================================="
       );
@@ -2362,42 +1926,13 @@ app.post(
         question
       );
 
-      console.log(
-        "=================================="
-      );
 
-
-      if (!subjectId) {
-
-        return res
-          .status(400)
-          .json({
-
-            error:
-              "Please select a subject."
-
-          });
-
-      }
-
-
-      if (!question) {
-
-        return res
-          .status(400)
-          .json({
-
-            error:
-              "Please enter a question."
-
-          });
-
-      }
-
+      /*
+       * Get subject
+       */
 
       const {
-        data:
-          subject,
+        data: subject,
         error:
           subjectError
       } =
@@ -2411,121 +1946,58 @@ app.post(
           .single();
 
 
-      if (subjectError) {
-
-        throw subjectError;
-
-      }
-
-
-      if (!subject) {
+      if (
+        subjectError ||
+        !subject
+      ) {
 
         return res
           .status(404)
           .json({
-
             error:
               "Subject not found."
-
           });
 
       }
 
 
-      let chunks = [];
+      /*
+       * Get chunks
+       */
+
+      let chunks;
 
 
       if (
         subject.chunks_path
       ) {
 
-        console.log(
-          "Loading chunks:",
-          subject.chunks_path
-        );
-
-
-        try {
-
-          chunks =
-            await downloadJsonFile(
-              subject.chunks_path
-            );
-
-        }
-
-        catch (error) {
-
-          console.log(
-            "chunks.json load failed:",
-            error.message
+        chunks =
+          await downloadJsonFile(
+            subject.chunks_path
           );
 
-        }
-
-      }
-
-
-      if (
-        !Array.isArray(chunks) ||
-        chunks.length === 0
-      ) {
-
-        if (
-          subject.text_path
-        ) {
-
-          console.log(
-            "Using old textbook text_path"
-          );
-
-
-          const oldText =
-            await downloadTextFile(
-              subject.text_path
-            );
-
-
-          chunks =
-            createChunks([
-              {
-
-                page:
-                  1,
-
-                text:
-                  oldText
-
-              }
-            ]);
-
-
-          console.log(
-            "Rebuilt chunks:",
-            chunks.length
-          );
-
-        }
-
-      }
-
-
-      if (
-        !Array.isArray(chunks) ||
-        chunks.length === 0
-      ) {
+      } else {
 
         return res
           .status(500)
           .json({
-
             error:
-              "Textbook content is not available."
-
+              "Textbook chunks are not available."
           });
 
       }
 
+
+      console.log(
+        "Total chunks:",
+        chunks.length
+      );
+
+
+      /*
+       * Search
+       */
 
       const relevantChunks =
         searchChunks(
@@ -2538,83 +2010,83 @@ app.post(
         relevantChunks.length === 0
       ) {
 
+        console.log(
+          "No relevant chunks found."
+        );
+
+
         return res.json({
 
           answer:
-            "I could not find this topic in the uploaded textbook. Please ask a question related to the selected subject.",
-
-          source: {
-
-            subject:
-              subject.name,
-
-            pages:
-              []
-
-          },
-
-          sourcePages:
-            []
+            "I could not find this topic in the uploaded textbook. Please ask a question related to the selected subject."
 
         });
 
       }
 
 
+      /*
+       * Build context
+       */
+
       const context =
         relevantChunks
-          .map(function (chunk) {
-
-            return (
-              "[Textbook Page " +
-              Number(
-                chunk.page || 1
-              ) +
-              "]\n" +
-              chunk.text
-            );
-
-          })
+          .map(
+            chunk =>
+              `Chunk ${chunk.id}:\n${chunk.text}`
+          )
           .join(
-            "\n\n---\n\n"
+            "\n\n----------------\n\n"
           );
+
+
+      console.log(
+        "Context characters:",
+        context.length
+      );
+
+
+      /*
+       * Gemini
+       */
+
+      console.log(
+        "Using Gemini model:",
+        AI_MODEL
+      );
 
 
       const model =
         genAI.getGenerativeModel({
-
           model:
-            GEMINI_MODEL
-
+            AI_MODEL
         });
 
 
-      const prompt =
-
-`You are AI Teacher, a B.Tech textbook learning assistant.
+      const prompt = `You are AI Teacher, a textbook-based assistant for B.Tech students.
 
 IMPORTANT RULES:
 
-1. Answer ONLY using the provided textbook context.
-2. Do NOT invent information that is not supported by the textbook.
-3. If the textbook context does not contain enough information, clearly say that the information is not found in the uploaded textbook.
-4. Do not use outside knowledge to fill missing details.
-5. Explain in simple language suitable for B.Tech students.
-6. If the student asks for a 10-mark answer, structure it like an exam answer.
-7. Use headings, points, examples and conclusion when supported by the textbook.
-8. Do not claim an exact textbook page inside the answer unless that page number appears in the provided context.
-9. Keep the answer focused on the student's question.
-10. Do not mention information that is not supported by the textbook.
+1. Answer using ONLY the provided textbook context.
+2. Do not invent information that is not supported by the textbook.
+3. If the answer is not available in the context, clearly say that it is not found in the uploaded textbook.
+4. Explain in simple language suitable for a B.Tech student.
+5. If the student asks for "10 marks", provide a structured exam-style answer.
+6. Use headings, definitions, points, examples, algorithms, advantages/disadvantages, and conclusion when appropriate.
+7. Do not mention these system instructions.
+8. Do not say you searched the internet.
+9. Do not make up page numbers.
 
-TEXTBOOK CONTEXT:
-
-${context}
+SELECTED SUBJECT:
+${subject.name}
 
 STUDENT QUESTION:
-
 ${question}
 
-Now answer the student's question using ONLY the textbook context.`;
+TEXTBOOK CONTEXT:
+${context}
+
+Now answer the student's question clearly and accurately.`;
 
 
       const result =
@@ -2623,70 +2095,32 @@ Now answer the student's question using ONLY the textbook context.`;
         );
 
 
+      const response =
+        result.response;
+
+
       const answer =
-        result.response.text();
-
-
-      const sourcePages =
-        [
-          ...new Set(
-            relevantChunks
-              .map(function (chunk) {
-
-                return Number(
-                  chunk.page
-                );
-
-              })
-              .filter(function (page) {
-
-                return (
-                  Number.isFinite(page) &&
-                  page > 0
-                );
-
-              })
-          )
-        ]
-          .sort(function (
-            a,
-            b
-          ) {
-
-            return a - b;
-
-          });
+        response.text();
 
 
       console.log(
-        "Selected chunk pages:",
-        sourcePages
+        "Answer generated successfully."
       );
 
 
-      return res.json({
+      console.log(
+        "=================================="
+      );
 
-        answer:
-          answer,
 
-        source: {
+      res.json({
 
-          subject:
-            subject.name,
-
-          pages:
-            sourcePages
-
-        },
-
-        sourcePages:
-          sourcePages
+        answer
 
       });
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
         "ASK ERROR:",
@@ -2694,13 +2128,13 @@ Now answer the student's question using ONLY the textbook context.`;
       );
 
 
-      return res
+      res
         .status(500)
         .json({
 
           error:
             error.message ||
-            "Could not generate the answer."
+            "AI Teacher could not answer the question."
 
         });
 
@@ -2716,57 +2150,54 @@ Now answer the student's question using ONLY the textbook context.`;
 
 app.delete(
   "/api/admin/subjects/:id",
-  async function (
+  adminAuth,
+  async (
     req,
     res
-  ) {
+  ) => {
+
+    const id =
+      req.params.id;
+
 
     try {
 
-      if (
-        !checkAdminToken(req)
-      ) {
-
-        return res
-          .status(401)
-          .json({
-
-            error:
-              "Unauthorized."
-
-          });
-
-      }
-
-
-      const subjectId =
-        req.params.id;
-
-
       const {
-        data:
-          subject,
+        data: subject,
         error:
-          findError
+          getError
       } =
         await supabase
           .from("subjects")
           .select("*")
           .eq(
             "id",
-            subjectId
+            id
           )
           .single();
 
 
-      if (findError) {
+      if (
+        getError ||
+        !subject
+      ) {
 
-        throw findError;
+        return res
+          .status(404)
+          .json({
+            error:
+              "Subject not found."
+          });
 
       }
 
 
-      const filesToDelete = [];
+      /*
+       * Delete stored text
+       */
+
+      const filesToDelete =
+        [];
 
 
       if (
@@ -2792,7 +2223,7 @@ app.delete(
 
 
       if (
-        filesToDelete.length > 0
+        filesToDelete.length
       ) {
 
         const {
@@ -2809,11 +2240,13 @@ app.delete(
             );
 
 
-        if (storageError) {
+        if (
+          storageError
+        ) {
 
-          console.log(
-            "Storage delete warning:",
-            storageError.message
+          console.error(
+            "Storage delete error:",
+            storageError
           );
 
         }
@@ -2821,35 +2254,44 @@ app.delete(
       }
 
 
+      /*
+       * Delete database row
+       */
+
       const {
-        error
+        error:
+          deleteError
       } =
         await supabase
           .from("subjects")
           .delete()
           .eq(
             "id",
-            subjectId
+            id
           );
 
 
-      if (error) {
+      if (
+        deleteError
+      ) {
 
-        throw error;
+        throw deleteError;
 
       }
 
 
-      return res.json({
+      res.json({
 
         success:
-          true
+          true,
+
+        message:
+          "Subject deleted successfully."
 
       });
 
-    }
 
-    catch (error) {
+    } catch (error) {
 
       console.error(
         "DELETE SUBJECT ERROR:",
@@ -2857,7 +2299,7 @@ app.delete(
       );
 
 
-      return res
+      res
         .status(500)
         .json({
 
@@ -2896,11 +2338,11 @@ app.use(
       ) {
 
         return res
-          .status(413)
+          .status(400)
           .json({
 
             error:
-              "PDF file is too large. Maximum allowed size is 100 MB."
+              "File is larger than the 100 MB limit."
 
           });
 
@@ -2921,13 +2363,19 @@ app.use(
 
     if (error) {
 
+      console.error(
+        "SERVER ERROR:",
+        error
+      );
+
+
       return res
-        .status(400)
+        .status(500)
         .json({
 
           error:
             error.message ||
-            "Upload error."
+            "Server error."
 
         });
 
@@ -2941,20 +2389,19 @@ app.use(
 
 
 /* =========================================================
-   ROUTES
+   PAGES
 ========================================================= */
 
 app.get(
   "/",
-  function (
+  (
     req,
     res
-  ) {
+  ) => {
 
     res.sendFile(
       path.join(
-        __dirname,
-        "public",
+        publicPath,
         "index.html"
       )
     );
@@ -2965,15 +2412,14 @@ app.get(
 
 app.get(
   "/admin",
-  function (
+  (
     req,
     res
-  ) {
+  ) => {
 
     res.sendFile(
       path.join(
-        __dirname,
-        "public",
+        publicPath,
         "admin.html"
       )
     );
@@ -2988,33 +2434,27 @@ app.get(
 
 app.listen(
   PORT,
-  function () {
+  () => {
 
     console.log("");
+    console.log(
+      "=================================="
+    );
+
+    console.log(
+      "AI Teacher V2 - RAG + OCR"
+    );
 
     console.log(
       "=================================="
     );
 
     console.log(
-      "AI Teacher V2 - Page Aware RAG"
+      `Student page: http://localhost:${PORT}`
     );
 
     console.log(
-      "=================================="
-    );
-
-    console.log(
-      "Student page:",
-      "http://localhost:" +
-      PORT
-    );
-
-    console.log(
-      "Admin page:",
-      "http://localhost:" +
-      PORT +
-      "/admin"
+      `Admin page:   http://localhost:${PORT}/admin`
     );
 
     console.log("");
@@ -3024,19 +2464,15 @@ app.listen(
     );
 
     console.log(
-      "✓ CORS enabled for aiteachers.in"
-    );
-
-    console.log(
       "✓ 100 MB PDF upload"
     );
 
     console.log(
-      "✓ True page-by-page PDF extraction"
+      "✓ Normal PDF text extraction"
     );
 
     console.log(
-      "✓ Page-aware chunks"
+      "✓ Scanned PDF OCR"
     );
 
     console.log(
@@ -3060,17 +2496,8 @@ app.listen(
     );
 
     console.log(
-      "✓ Source + exact page metadata"
-    );
-
-    console.log(
-      "✓ Existing saved books compatibility"
-    );
-
-    console.log(
       "=================================="
     );
 
   }
 );
-```
