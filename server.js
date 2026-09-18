@@ -1,6 +1,8 @@
+```js
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
@@ -12,15 +14,81 @@ const { GoogleGenerativeAI } = require("@google/generative-ai");
 
 const app = express();
 
-app.use(express.json({ limit: "10mb" }));
-app.use(express.urlencoded({ extended: true }));
+/* =========================================================
+   CORS
+========================================================= */
+
+const allowedOrigins = [
+  "https://aiteachers.in",
+  "https://www.aiteachers.in",
+  "https://ai-teacher.raki74718.workers.dev",
+  "http://localhost:3000",
+  "http://localhost:10000"
+];
+
+app.use(
+  cors({
+    origin: function (origin, callback) {
+
+      // Allow requests without an Origin header
+      // such as curl/server-to-server requests.
+      if (!origin) {
+        return callback(null, true);
+      }
+
+      if (allowedOrigins.includes(origin)) {
+        return callback(null, true);
+      }
+
+      console.log(
+        "CORS blocked origin:",
+        origin
+      );
+
+      return callback(
+        new Error("Not allowed by CORS")
+      );
+    },
+
+    methods: [
+      "GET",
+      "POST",
+      "DELETE",
+      "OPTIONS"
+    ],
+
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-admin-token"
+    ]
+  })
+);
+
+/* =========================================================
+   EXPRESS
+========================================================= */
+
+app.use(
+  express.json({
+    limit: "10mb"
+  })
+);
+
+app.use(
+  express.urlencoded({
+    extended: true,
+    limit: "10mb"
+  })
+);
 
 
 /* =========================================================
    ENVIRONMENT
 ========================================================= */
 
-const PORT = process.env.PORT || 3000;
+const PORT =
+  process.env.PORT || 3000;
 
 const ADMIN_PASSWORD =
   process.env.ADMIN_PASSWORD;
@@ -73,9 +141,11 @@ if (
   !SUPABASE_URL ||
   !SUPABASE_SECRET_KEY
 ) {
+
   console.error(
     "Supabase environment variables are missing."
   );
+
 }
 
 const supabase =
@@ -90,9 +160,11 @@ const supabase =
 ========================================================= */
 
 if (!AI_API_KEY) {
+
   console.error(
     "AI_API_KEY is missing."
   );
+
 }
 
 const genAI =
@@ -106,10 +178,15 @@ const genAI =
 ========================================================= */
 
 const publicPath =
-  path.join(__dirname, "public");
+  path.join(
+    __dirname,
+    "public"
+  );
 
 app.use(
-  express.static(publicPath)
+  express.static(
+    publicPath
+  )
 );
 
 
@@ -118,12 +195,24 @@ app.use(
 ========================================================= */
 
 const tempPath =
-  path.join(__dirname, "tmp");
+  path.join(
+    __dirname,
+    "tmp"
+  );
 
-if (!fs.existsSync(tempPath)) {
-  fs.mkdirSync(tempPath, {
-    recursive: true
-  });
+if (
+  !fs.existsSync(
+    tempPath
+  )
+) {
+
+  fs.mkdirSync(
+    tempPath,
+    {
+      recursive: true
+    }
+  );
+
 }
 
 
@@ -230,13 +319,24 @@ const upload =
 
 function cleanText(text) {
 
-  return String(text || "")
+  return String(
+    text || ""
+  )
 
-    .replace(/\r/g, " ")
+    .replace(
+      /\r/g,
+      " "
+    )
 
-    .replace(/[ \t]+/g, " ")
+    .replace(
+      /[ \t]+/g,
+      " "
+    )
 
-    .replace(/\n{3,}/g, "\n\n")
+    .replace(
+      /\n{3,}/g,
+      "\n\n"
+    )
 
     .trim();
 
@@ -247,11 +347,14 @@ function cleanText(text) {
    CREATE CHUNKS
 ========================================================= */
 
-const CHUNK_SIZE = 2500;
+const CHUNK_SIZE =
+  2500;
 
-const CHUNK_OVERLAP = 300;
+const CHUNK_OVERLAP =
+  300;
 
-const TOP_K_CHUNKS = 10;
+const TOP_K_CHUNKS =
+  10;
 
 
 function createChunks(text) {
@@ -267,7 +370,8 @@ function createChunks(text) {
 
 
   while (
-    start < cleaned.length
+    start <
+    cleaned.length
   ) {
 
     let end =
@@ -372,10 +476,18 @@ function createChunks(text) {
 
 function normalizeQuestion(text) {
 
-  return String(text || "")
+  return String(
+    text || ""
+  )
     .toLowerCase()
-    .replace(/[^\w\s]/g, " ")
-    .replace(/\s+/g, " ")
+    .replace(
+      /[^\w\s]/g,
+      " "
+    )
+    .replace(
+      /\s+/g,
+      " "
+    )
     .trim();
 
 }
@@ -406,10 +518,6 @@ function searchChunks(
     );
 
 
-  /*
-   * Topic aliases
-   */
-
   const topicAliases = {
 
     avl: [
@@ -429,7 +537,6 @@ function searchChunks(
 
     ],
 
-
     bst: [
 
       "bst",
@@ -437,7 +544,6 @@ function searchChunks(
       "binary search trees"
 
     ],
-
 
     stack: [
 
@@ -450,7 +556,6 @@ function searchChunks(
 
     ],
 
-
     queue: [
 
       "queue",
@@ -460,7 +565,6 @@ function searchChunks(
       "fifo"
 
     ],
-
 
     linkedlist: [
 
@@ -472,7 +576,6 @@ function searchChunks(
 
     ],
 
-
     tree: [
 
       "tree",
@@ -482,7 +585,6 @@ function searchChunks(
 
     ],
 
-
     graph: [
 
       "graph",
@@ -491,7 +593,6 @@ function searchChunks(
       "dfs"
 
     ],
-
 
     sorting: [
 
@@ -505,7 +606,6 @@ function searchChunks(
 
     ],
 
-
     searching: [
 
       "searching",
@@ -516,10 +616,6 @@ function searchChunks(
 
   };
 
-
-  /*
-   * Stop words
-   */
 
   const stopWords =
     new Set([
@@ -571,10 +667,6 @@ function searchChunks(
     ]);
 
 
-  /*
-   * Question keywords
-   */
-
   const words =
     q
       .split(/\s+/)
@@ -590,10 +682,6 @@ function searchChunks(
         !stopWords.has(word)
     );
 
-
-  /*
-   * Detect topics
-   */
 
   const topics = [];
 
@@ -656,10 +744,6 @@ function searchChunks(
   );
 
 
-  /*
-   * Score every chunk
-   */
-
   const scored =
     chunks.map(
       (
@@ -677,10 +761,6 @@ function searchChunks(
 
         let score = 0;
 
-
-        /*
-         * Keyword matching
-         */
 
         for (
           const keyword
@@ -700,10 +780,6 @@ function searchChunks(
         }
 
 
-        /*
-         * Exact question
-         */
-
         if (
           q.length >= 4 &&
           text.includes(q)
@@ -713,10 +789,6 @@ function searchChunks(
 
         }
 
-
-        /*
-         * Topic matching
-         */
 
         for (
           const topic
@@ -746,10 +818,6 @@ function searchChunks(
 
         }
 
-
-        /*
-         * AVL boost
-         */
 
         if (
           topics.includes("avl")
@@ -810,10 +878,6 @@ function searchChunks(
         }
 
 
-        /*
-         * Stack boost
-         */
-
         if (
           topics.includes("stack")
         ) {
@@ -861,10 +925,6 @@ function searchChunks(
         }
 
 
-        /*
-         * BST boost
-         */
-
         if (
           topics.includes("bst")
         ) {
@@ -889,10 +949,6 @@ function searchChunks(
 
         }
 
-
-        /*
-         * Queue boost
-         */
 
         if (
           topics.includes("queue")
@@ -945,20 +1001,12 @@ function searchChunks(
     );
 
 
-  /*
-   * Highest score first
-   */
-
   scored.sort(
     (a, b) =>
       b.score -
       a.score
   );
 
-
-  /*
-   * Normal matches
-   */
 
   let selected =
     scored
@@ -971,10 +1019,6 @@ function searchChunks(
         TOP_K_CHUNKS
       );
 
-
-  /*
-   * Topic fallback
-   */
 
   if (
     selected.length === 0 &&
@@ -1070,10 +1114,6 @@ function searchChunks(
 
   }
 
-
-  /*
-   * Add neighbouring chunks
-   */
 
   const finalIndexes =
     new Set();
@@ -1218,9 +1258,7 @@ async function uploadJsonFile(
 
   const buffer =
     Buffer.from(
-      JSON.stringify(
-        data
-      ),
+      JSON.stringify(data),
       "utf8"
     );
 
@@ -1432,7 +1470,10 @@ app.get(
 
     try {
 
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await supabase
           .from("subjects")
           .select(
@@ -1492,7 +1533,10 @@ app.get(
 
     try {
 
-      const { data, error } =
+      const {
+        data,
+        error
+      } =
         await supabase
           .from("subjects")
           .select("*")
@@ -1614,10 +1658,6 @@ app.post(
       );
 
 
-      /*
-       * Extract text
-       */
-
       const extracted =
         await extractPdfText(
           uploadedFile
@@ -1638,10 +1678,6 @@ app.post(
 
       }
 
-
-      /*
-       * Create chunks
-       */
 
       console.log(
         "Creating chunks..."
@@ -1674,25 +1710,11 @@ app.post(
       }
 
 
-      /*
-       * Create subject ID
-       */
-
       const subjectId =
         crypto
           .randomBytes(8)
           .toString("hex");
 
-
-      /*
-       * Storage paths
-       *
-       * IMPORTANT:
-       * Original PDF is NOT uploaded.
-       *
-       * This avoids Supabase Free Plan
-       * 50 MB file-size limitation.
-       */
 
       const textPath =
         `books/${subjectId}/book.txt`;
@@ -1700,10 +1722,6 @@ app.post(
       const chunksPath =
         `books/${subjectId}/chunks.json`;
 
-
-      /*
-       * Upload extracted text
-       */
 
       console.log(
         "Uploading book text..."
@@ -1716,10 +1734,6 @@ app.post(
       );
 
 
-      /*
-       * Upload chunks
-       */
-
       console.log(
         "Uploading chunks..."
       );
@@ -1731,35 +1745,32 @@ app.post(
       );
 
 
-      /*
-       * Insert subject metadata
-       */
+      const {
+        error: subjectError
+      } =
+        await supabase
+          .from("subjects")
+          .insert({
 
-      const { error:
-        subjectError
-      } = await supabase
-        .from("subjects")
-        .insert({
+            id:
+              subjectId,
 
-          id:
-            subjectId,
+            name:
+              subjectName,
 
-          name:
-            subjectName,
+            pages:
+              extracted.pages,
 
-          pages:
-            extracted.pages,
+            characters:
+              extracted.text.length,
 
-          characters:
-            extracted.text.length,
+            text_path:
+              textPath,
 
-          text_path:
-            textPath,
+            chunks_path:
+              chunksPath
 
-          chunks_path:
-            chunksPath
-
-        });
+          });
 
 
       if (
@@ -1827,10 +1838,6 @@ app.post(
 
 
     } finally {
-
-      /*
-       * Delete temporary PDF
-       */
 
       if (
         uploadedFile &&
@@ -1927,14 +1934,9 @@ app.post(
       );
 
 
-      /*
-       * Get subject
-       */
-
       const {
         data: subject,
-        error:
-          subjectError
+        error: subjectError
       } =
         await supabase
           .from("subjects")
@@ -1960,10 +1962,6 @@ app.post(
 
       }
 
-
-      /*
-       * Get chunks
-       */
 
       let chunks;
 
@@ -1995,10 +1993,6 @@ app.post(
       );
 
 
-      /*
-       * Search
-       */
-
       const relevantChunks =
         searchChunks(
           question,
@@ -2025,10 +2019,6 @@ app.post(
       }
 
 
-      /*
-       * Build context
-       */
-
       const context =
         relevantChunks
           .map(
@@ -2046,10 +2036,6 @@ app.post(
       );
 
 
-      /*
-       * Gemini
-       */
-
       console.log(
         "Using Gemini model:",
         AI_MODEL
@@ -2058,12 +2044,15 @@ app.post(
 
       const model =
         genAI.getGenerativeModel({
+
           model:
             AI_MODEL
+
         });
 
 
-      const prompt = `You are AI Teacher, a textbook-based assistant for B.Tech students.
+      const prompt = `
+You are AI Teacher, a textbook-based assistant for B.Tech students.
 
 IMPORTANT RULES:
 
@@ -2086,7 +2075,8 @@ ${question}
 TEXTBOOK CONTEXT:
 ${context}
 
-Now answer the student's question clearly and accurately.`;
+Now answer the student's question clearly and accurately.
+`;
 
 
       const result =
@@ -2164,8 +2154,7 @@ app.delete(
 
       const {
         data: subject,
-        error:
-          getError
+        error: getError
       } =
         await supabase
           .from("subjects")
@@ -2191,10 +2180,6 @@ app.delete(
 
       }
 
-
-      /*
-       * Delete stored text
-       */
 
       const filesToDelete =
         [];
@@ -2227,8 +2212,7 @@ app.delete(
       ) {
 
         const {
-          error:
-            storageError
+          error: storageError
         } =
           await supabase
             .storage
@@ -2254,13 +2238,8 @@ app.delete(
       }
 
 
-      /*
-       * Delete database row
-       */
-
       const {
-        error:
-          deleteError
+        error: deleteError
       } =
         await supabase
           .from("subjects")
@@ -2316,7 +2295,7 @@ app.delete(
 
 
 /* =========================================================
-   MULTER ERROR HANDLER
+   MULTER / SERVER ERROR HANDLER
 ========================================================= */
 
 app.use(
@@ -2437,12 +2416,13 @@ app.listen(
   () => {
 
     console.log("");
+
     console.log(
       "=================================="
     );
 
     console.log(
-      "AI Teacher V2 - RAG + OCR"
+      "AI Teacher V2 - RAG"
     );
 
     console.log(
@@ -2472,7 +2452,7 @@ app.listen(
     );
 
     console.log(
-      "✓ Scanned PDF OCR"
+      "✓ Page/chunk text storage"
     );
 
     console.log(
@@ -2496,8 +2476,13 @@ app.listen(
     );
 
     console.log(
+      "✓ Cloudflare Worker CORS"
+    );
+
+    console.log(
       "=================================="
     );
 
   }
 );
+```
