@@ -1,6 +1,8 @@
+```js
 require("dotenv").config();
 
 const express = require("express");
+const cors = require("cors");
 const multer = require("multer");
 const fs = require("fs");
 const path = require("path");
@@ -15,15 +17,40 @@ const PORT = process.env.PORT || 3000;
 
 
 /* =========================================================
+   CORS
+========================================================= */
+
+app.use(
+  cors({
+    origin: [
+      "https://aiteachers.in",
+      "https://www.aiteachers.in",
+      "http://localhost:3000",
+      "http://localhost:10000"
+    ],
+    methods: ["GET", "POST", "DELETE", "OPTIONS"],
+    allowedHeaders: [
+      "Content-Type",
+      "Authorization",
+      "x-admin-token"
+    ]
+  })
+);
+
+
+/* =========================================================
    ENVIRONMENT
 ========================================================= */
 
-const ADMIN_PASSWORD = process.env.ADMIN_PASSWORD || "";
+const ADMIN_PASSWORD =
+  process.env.ADMIN_PASSWORD || "";
 
-const GEMINI_API_KEY = process.env.AI_API_KEY || "";
+const GEMINI_API_KEY =
+  process.env.AI_API_KEY || "";
 
 const GEMINI_MODEL =
-  process.env.AI_MODEL || "gemini-3.6-flash";
+  process.env.AI_MODEL ||
+  "gemini-3.6-flash";
 
 const SUPABASE_URL =
   process.env.SUPABASE_URL || "";
@@ -78,9 +105,10 @@ const STORAGE_BUCKET = "books";
    GEMINI
 ========================================================= */
 
-const genAI = new GoogleGenerativeAI(
-  GEMINI_API_KEY
-);
+const genAI =
+  new GoogleGenerativeAI(
+    GEMINI_API_KEY
+  );
 
 
 /* =========================================================
@@ -102,7 +130,10 @@ app.use(
 
 app.use(
   express.static(
-    path.join(__dirname, "public")
+    path.join(
+      __dirname,
+      "public"
+    )
   )
 );
 
@@ -111,7 +142,8 @@ app.use(
    ADMIN TOKENS
 ========================================================= */
 
-const adminTokens = new Set();
+const adminTokens =
+  new Set();
 
 
 function createAdminToken() {
@@ -141,10 +173,11 @@ function checkAdminToken(req) {
    TEMP DIRECTORY
 ========================================================= */
 
-const tmpDir = path.join(
-  __dirname,
-  "tmp"
-);
+const tmpDir =
+  path.join(
+    __dirname,
+    "tmp"
+  );
 
 
 if (!fs.existsSync(tmpDir)) {
@@ -364,10 +397,13 @@ function getKeywords(question) {
       "detailed",
       "marks",
       "mark"
+
     ]);
 
 
-  return normalizeQuestion(question)
+  return normalizeQuestion(
+    question
+  )
 
     .split(" ")
 
@@ -390,7 +426,9 @@ function getKeywords(question) {
 function detectTopics(question) {
 
   const q =
-    normalizeQuestion(question);
+    normalizeQuestion(
+      question
+    );
 
   const topics = [];
 
@@ -517,11 +555,14 @@ function detectTopics(question) {
    CHUNK SETTINGS
 ========================================================= */
 
-const CHUNK_SIZE = 2500;
+const CHUNK_SIZE =
+  2500;
 
-const CHUNK_OVERLAP = 300;
+const CHUNK_OVERLAP =
+  300;
 
-const TOP_K_CHUNKS = 10;
+const TOP_K_CHUNKS =
+  10;
 
 
 /* =========================================================
@@ -555,10 +596,14 @@ function createChunks(pageData) {
   ) {
 
     const pageNumber =
-      Number(page.page || 1);
+      Number(
+        page.page || 1
+      );
 
     const cleaned =
-      cleanText(page.text);
+      cleanText(
+        page.text
+      );
 
 
     if (!cleaned) {
@@ -632,11 +677,14 @@ function createChunks(pageData) {
 
         chunks.push({
 
-          id: id,
+          id:
+            id,
 
-          page: pageNumber,
+          page:
+            pageNumber,
 
-          text: chunkText
+          text:
+            chunkText
 
         });
 
@@ -655,7 +703,8 @@ function createChunks(pageData) {
         start
       ) {
 
-        start = end;
+        start =
+          end;
 
       }
 
@@ -694,12 +743,6 @@ async function extractPdfText(
       filePath
     );
 
-
-  /*
-   * pdfjs-dist v4 is ESM.
-   * Dynamic import keeps this
-   * server.js in CommonJS mode.
-   */
 
   const pdfjsLib =
     await import(
@@ -741,10 +784,6 @@ async function extractPdfText(
   const pageData = [];
 
 
-  /*
-   * Extract every PDF page separately.
-   */
-
   for (
     let pageNumber = 1;
     pageNumber <= totalPages;
@@ -777,6 +816,7 @@ async function extractPdfText(
 
         pageText +=
           item.str;
+
 
         if (
           item.hasEOL
@@ -841,7 +881,9 @@ async function extractPdfText(
 
       })
 
-      .join("\n\n");
+      .join(
+        "\n\n"
+      );
 
 
   console.log(
@@ -1019,8 +1061,12 @@ async function downloadTextFile(
 
 
   return Buffer
-    .from(arrayBuffer)
-    .toString("utf8");
+    .from(
+      arrayBuffer
+    )
+    .toString(
+      "utf8"
+    );
 
 }
 
@@ -1069,11 +1115,17 @@ async function downloadJsonFile(
 
   const text =
     Buffer
-      .from(arrayBuffer)
-      .toString("utf8");
+      .from(
+        arrayBuffer
+      )
+      .toString(
+        "utf8"
+      );
 
 
-  return JSON.parse(text);
+  return JSON.parse(
+    text
+  );
 
 }
 
@@ -1210,7 +1262,9 @@ function topicMatchesText(
   }
 
 
-  return text.includes(topic);
+  return text.includes(
+    topic
+  );
 
 }
 
@@ -1297,10 +1351,6 @@ function searchChunks(
         let score = 0;
 
 
-        /*
-         * Exact question phrase
-         */
-
         if (
           q.length > 4 &&
           text.includes(q)
@@ -1310,10 +1360,6 @@ function searchChunks(
 
         }
 
-
-        /*
-         * Keyword matching
-         */
 
         for (
           const keyword of keywords
@@ -1330,10 +1376,6 @@ function searchChunks(
         }
 
 
-        /*
-         * Topic matching
-         */
-
         for (
           const topic of topics
         ) {
@@ -1349,10 +1391,6 @@ function searchChunks(
 
           }
 
-
-          /*
-           * Extra topic boosts
-           */
 
           if (
             topic === "avl"
@@ -1448,7 +1486,9 @@ function searchChunks(
             index,
 
           id:
-            Number(chunk.id),
+            Number(
+              chunk.id
+            ),
 
           page:
             Number(
@@ -1486,10 +1526,6 @@ function searchChunks(
 
       });
 
-
-  /*
-   * Topic fallback
-   */
 
   if (
     relevant.length === 0 &&
@@ -1565,10 +1601,6 @@ function searchChunks(
   );
 
 
-  /*
-   * Add neighboring chunks.
-   */
-
   const finalMap =
     new Map();
 
@@ -1588,7 +1620,9 @@ function searchChunks(
         function (chunk) {
 
           return (
-            Number(chunk.id) ===
+            Number(
+              chunk.id
+            ) ===
             item.id - 1
           );
 
@@ -1601,7 +1635,9 @@ function searchChunks(
         function (chunk) {
 
           return (
-            Number(chunk.id) ===
+            Number(
+              chunk.id
+            ) ===
             item.id + 1
           );
 
@@ -1612,13 +1648,17 @@ function searchChunks(
     if (previous) {
 
       finalMap.set(
-        Number(previous.id),
+        Number(
+          previous.id
+        ),
         {
 
           ...previous,
 
           id:
-            Number(previous.id),
+            Number(
+              previous.id
+            ),
 
           page:
             Number(
@@ -1640,13 +1680,17 @@ function searchChunks(
     if (next) {
 
       finalMap.set(
-        Number(next.id),
+        Number(
+          next.id
+        ),
         {
 
           ...next,
 
           id:
-            Number(next.id),
+            Number(
+              next.id
+            ),
 
           page:
             Number(
@@ -1930,7 +1974,8 @@ app.post(
     res
   ) {
 
-    let uploadedFile = null;
+    let uploadedFile =
+      null;
 
 
     try {
@@ -2013,10 +2058,6 @@ app.post(
         "=================================="
       );
 
-
-      /*
-       * Extract every page separately.
-       */
 
       const extracted =
         await extractPdfText(
@@ -2104,10 +2145,6 @@ app.post(
       );
 
 
-      /*
-       * Create subject ID.
-       */
-
       const subjectId =
         crypto
           .randomBytes(8)
@@ -2125,17 +2162,6 @@ app.post(
         subjectId +
         "/chunks.json";
 
-
-      /*
-       * IMPORTANT:
-       * We do NOT upload the original PDF.
-       *
-       * Supabase Free Storage has a
-       * file-size limitation.
-       *
-       * We store only extracted text
-       * and chunks JSON.
-       */
 
       console.log(
         "Uploading book text..."
@@ -2158,10 +2184,6 @@ app.post(
         chunks
       );
 
-
-      /*
-       * Save subject metadata.
-       */
 
       const {
         error:
@@ -2204,10 +2226,6 @@ app.post(
         subjectId
       );
 
-
-      /*
-       * Delete temporary PDF.
-       */
 
       try {
 
@@ -2377,10 +2395,6 @@ app.post(
       }
 
 
-      /*
-       * Find subject.
-       */
-
       const {
         data:
           subject,
@@ -2421,10 +2435,6 @@ app.post(
       let chunks = [];
 
 
-      /*
-       * Load new page-aware chunks.
-       */
-
       if (
         subject.chunks_path
       ) {
@@ -2455,14 +2465,6 @@ app.post(
 
       }
 
-
-      /*
-       * Compatibility with old books.
-       *
-       * Old books may only have text_path.
-       * Their original page information
-       * cannot be recovered here.
-       */
 
       if (
         !Array.isArray(chunks) ||
@@ -2525,10 +2527,6 @@ app.post(
       }
 
 
-      /*
-       * Search textbook.
-       */
-
       const relevantChunks =
         searchChunks(
           question,
@@ -2563,17 +2561,15 @@ app.post(
       }
 
 
-      /*
-       * Build context.
-       */
-
       const context =
         relevantChunks
           .map(function (chunk) {
 
             return (
               "[Textbook Page " +
-              Number(chunk.page || 1) +
+              Number(
+                chunk.page || 1
+              ) +
               "]\n" +
               chunk.text
             );
@@ -2583,10 +2579,6 @@ app.post(
             "\n\n---\n\n"
           );
 
-
-      /*
-       * Gemini model.
-       */
 
       const model =
         genAI.getGenerativeModel({
@@ -2634,10 +2626,6 @@ Now answer the student's question using ONLY the textbook context.`;
       const answer =
         result.response.text();
 
-
-      /*
-       * Get exact source pages.
-       */
 
       const sourcePages =
         [
@@ -3036,6 +3024,10 @@ app.listen(
     );
 
     console.log(
+      "✓ CORS enabled for aiteachers.in"
+    );
+
+    console.log(
       "✓ 100 MB PDF upload"
     );
 
@@ -3081,3 +3073,4 @@ app.listen(
 
   }
 );
+```
