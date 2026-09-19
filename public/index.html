@@ -1,360 +1,1126 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8" />
+  <meta
+    name="viewport"
+    content="width=device-width, initial-scale=1.0"
+  />
 
-  <title>AI Teacher | Learn Smarter</title>
+  <title>AI Teacher | Learn Smarter With AI</title>
+
+  <meta
+    name="description"
+    content="AI Teacher helps students learn from textbooks and study materials with AI-powered answers."
+  />
 
   <style>
+    :root {
+      --primary: #4f46e5;
+      --primary-dark: #3730a3;
+      --purple: #7c3aed;
+      --blue: #2563eb;
+
+      --text: #172033;
+      --muted: #667085;
+
+      --bg: #f5f7ff;
+      --white: #ffffff;
+
+      --border: #e6e8f0;
+
+      --success: #16a34a;
+      --warning: #f59e0b;
+
+      --shadow-sm: 0 8px 25px rgba(31, 41, 55, 0.06);
+      --shadow: 0 20px 60px rgba(49, 46, 129, 0.12);
+    }
+
     * {
       box-sizing: border-box;
-      margin: 0;
-      padding: 0;
+    }
+
+    html {
+      scroll-behavior: smooth;
     }
 
     body {
-      font-family: Arial, Helvetica, sans-serif;
-      background: #f5f7f6;
-      color: #1f2937;
+      margin: 0;
+      font-family:
+        Inter,
+        ui-sans-serif,
+        system-ui,
+        -apple-system,
+        BlinkMacSystemFont,
+        "Segoe UI",
+        sans-serif;
+
+      color: var(--text);
+
+      background:
+        radial-gradient(
+          circle at 5% 5%,
+          rgba(79, 70, 229, 0.10),
+          transparent 28%
+        ),
+        radial-gradient(
+          circle at 95% 10%,
+          rgba(124, 58, 237, 0.09),
+          transparent 30%
+        ),
+        linear-gradient(
+          180deg,
+          #f9faff 0%,
+          #f4f6ff 45%,
+          #f8f9fc 100%
+        );
+
+      min-height: 100vh;
     }
+
+    a {
+      color: inherit;
+      text-decoration: none;
+    }
+
+    button,
+    select,
+    textarea {
+      font: inherit;
+    }
+
+    /* =========================
+       NAVBAR
+    ========================= */
 
     .navbar {
-      background: #2f6418;
-      color: white;
-      padding: 18px 30px;
+      position: sticky;
+      top: 0;
+      z-index: 100;
+
+      height: 72px;
+
       display: flex;
-      justify-content: space-between;
       align-items: center;
+      justify-content: space-between;
+
+      padding: 0 6%;
+
+      background: rgba(255, 255, 255, 0.86);
+      backdrop-filter: blur(18px);
+
+      border-bottom: 1px solid rgba(230, 232, 240, 0.8);
     }
 
-    .logo {
-      font-size: 25px;
-      font-weight: bold;
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 11px;
+
+      font-size: 21px;
+      font-weight: 800;
+      letter-spacing: -0.5px;
     }
 
-    .logo span {
-      color: #ffd83d;
+    .brand-icon {
+      width: 40px;
+      height: 40px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 12px;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary),
+          var(--purple)
+        );
+
+      color: white;
+
+      box-shadow:
+        0 8px 20px rgba(79, 70, 229, 0.25);
     }
 
-    .nav-text {
-      font-size: 14px;
-      opacity: 0.95;
+    .brand-text {
+      background:
+        linear-gradient(
+          90deg,
+          var(--primary),
+          var(--purple)
+        );
+
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
     }
+
+    .nav-right {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .nav-email {
+      padding: 9px 14px;
+
+      border-radius: 10px;
+
+      color: #4b5563;
+
+      font-size: 13px;
+      font-weight: 600;
+
+      transition: 0.2s;
+    }
+
+    .nav-email:hover {
+      background: #f1f3ff;
+      color: var(--primary);
+    }
+
+    .nav-status {
+      display: flex;
+      align-items: center;
+      gap: 7px;
+
+      padding: 8px 12px;
+
+      border-radius: 999px;
+
+      background: #f0fdf4;
+      color: #15803d;
+
+      font-size: 12px;
+      font-weight: 700;
+    }
+
+    .status-dot {
+      width: 7px;
+      height: 7px;
+
+      border-radius: 50%;
+
+      background: #22c55e;
+
+      box-shadow:
+        0 0 0 4px rgba(34, 197, 94, 0.10);
+    }
+
+    /* =========================
+       HERO
+    ========================= */
 
     .hero {
-      background: white;
+      max-width: 1200px;
+      margin: 0 auto;
+
+      padding: 70px 24px 50px;
+
       text-align: center;
-      padding: 45px 20px 35px;
     }
 
-    .badge {
-      display: inline-block;
-      background: #edf8e8;
-      color: #2f6418;
-      padding: 8px 15px;
-      border-radius: 20px;
-      font-size: 13px;
-      font-weight: bold;
-      margin-bottom: 15px;
+    .hero-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+
+      padding: 8px 14px;
+
+      border: 1px solid #dfe3ff;
+      border-radius: 999px;
+
+      background: rgba(255, 255, 255, 0.8);
+
+      color: var(--primary);
+
+      font-size: 12px;
+      font-weight: 800;
+
+      box-shadow: var(--shadow-sm);
     }
 
     .hero h1 {
-      font-size: 42px;
-      margin-bottom: 12px;
-      color: #183b0e;
+      margin: 22px auto 0;
+
+      max-width: 850px;
+
+      font-size: clamp(40px, 6vw, 72px);
+
+      line-height: 1.02;
+
+      letter-spacing: -3px;
+
+      font-weight: 850;
     }
 
-    .hero h1 span {
-      color: #2f6418;
+    .hero h1 .gradient {
+      background:
+        linear-gradient(
+          90deg,
+          #4f46e5,
+          #7c3aed,
+          #2563eb
+        );
+
+      -webkit-background-clip: text;
+      background-clip: text;
+
+      color: transparent;
     }
 
-    .hero p {
-      max-width: 700px;
-      margin: auto;
-      color: #666;
-      font-size: 17px;
-      line-height: 1.6;
+    .hero-description {
+      max-width: 680px;
+
+      margin: 22px auto 0;
+
+      color: var(--muted);
+
+      font-size: 16px;
+
+      line-height: 1.7;
     }
 
-    .pills {
-      margin-top: 22px;
+    .hero-pills {
       display: flex;
-      justify-content: center;
-      gap: 10px;
       flex-wrap: wrap;
+      justify-content: center;
+
+      gap: 10px;
+
+      margin-top: 28px;
     }
 
-    .pill {
-      background: #f2f5f2;
-      border: 1px solid #dce5dc;
-      padding: 9px 15px;
-      border-radius: 20px;
-      font-size: 13px;
+    .hero-pill {
+      padding: 8px 13px;
+
+      border-radius: 999px;
+
+      background: white;
+
+      border: 1px solid var(--border);
+
+      color: #475467;
+
+      font-size: 12px;
+      font-weight: 650;
+
+      box-shadow: 0 5px 18px rgba(31, 41, 55, 0.04);
     }
 
-    .main-container {
-      max-width: 1400px;
-      margin: 30px auto;
-      padding: 0 20px;
+    /* =========================
+       MAIN GRID
+    ========================= */
+
+    .main-layout {
+      max-width: 1320px;
+
+      margin: 0 auto;
+
+      padding: 10px 22px 60px;
+
       display: grid;
-      grid-template-columns: 220px minmax(400px, 760px) 220px;
-      gap: 25px;
+
+      grid-template-columns:
+        180px
+        minmax(0, 760px)
+        180px;
+
+      gap: 22px;
+
       align-items: start;
     }
 
-    .ad {
-      border-radius: 18px;
-      padding: 12px;
-      color: white;
-      min-height: 270px;
-      position: sticky;
-      top: 20px;
-      box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+    /* =========================
+       ADS
+    ========================= */
+
+    .ad-column {
+      display: flex;
+      flex-direction: column;
+      gap: 14px;
+    }
+
+    .ad-label {
+      font-size: 10px;
+
+      text-transform: uppercase;
+
+      letter-spacing: 1px;
+
+      color: #98a2b3;
+
+      text-align: center;
+
+      font-weight: 700;
+    }
+
+    .ad-card {
       overflow: hidden;
-      background: #eef2ee;
-    }
 
-    .ad-left {
-      background: linear-gradient(145deg, #28731a, #67a82e);
-    }
+      border-radius: 18px;
 
-    .ad-right {
-      background: linear-gradient(145deg, #283593, #7b4dd8);
-    }
-
-    .ad h3 {
-      font-size: 21px;
-      line-height: 1.3;
-      margin: 10px 6px 15px;
-    }
-
-    .ad p {
-      font-size: 14px;
-      line-height: 1.5;
-      margin: 0 6px 20px;
-    }
-
-    .ad button {
-      border: none;
       background: white;
-      color: #245515;
-      padding: 10px 14px;
-      border-radius: 8px;
-      font-weight: bold;
-      cursor: pointer;
+
+      border: 1px solid var(--border);
+
+      box-shadow: var(--shadow-sm);
+
+      transition:
+        transform 0.25s ease,
+        box-shadow 0.25s ease;
     }
 
-    /*
-     * DYNAMIC AD IMAGE
-     */
+    .ad-card:hover {
+      transform: translateY(-3px);
 
-    .dynamic-ad-link {
+      box-shadow: var(--shadow);
+    }
+
+    .ad-image {
       display: block;
+
       width: 100%;
-      text-decoration: none;
-      color: inherit;
+
+      height: 230px;
+
+      object-fit: cover;
     }
 
-    .dynamic-ad-image {
+    .ad-empty {
+      min-height: 230px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      padding: 20px;
+
+      text-align: center;
+
+      color: #98a2b3;
+
+      font-size: 12px;
+
+      background:
+        linear-gradient(
+          145deg,
+          #fafaff,
+          #f4f5ff
+        );
+    }
+
+    /* =========================
+       AI WORKSPACE
+    ========================= */
+
+    .workspace {
+      background: rgba(255, 255, 255, 0.94);
+
+      border: 1px solid rgba(226, 228, 240, 0.9);
+
+      border-radius: 28px;
+
+      box-shadow: var(--shadow);
+
+      overflow: hidden;
+    }
+
+    .workspace-top {
+      padding: 28px 30px 24px;
+
+      border-bottom: 1px solid #eef0f5;
+
+      background:
+        linear-gradient(
+          135deg,
+          rgba(238, 242, 255, 0.95),
+          rgba(250, 247, 255, 0.95)
+        );
+    }
+
+    .workspace-title-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+
+      gap: 15px;
+    }
+
+    .teacher-title {
+      display: flex;
+      align-items: center;
+      gap: 13px;
+    }
+
+    .teacher-avatar {
+      width: 48px;
+      height: 48px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 15px;
+
+      background:
+        linear-gradient(
+          135deg,
+          var(--primary),
+          var(--purple)
+        );
+
+      color: white;
+
+      font-size: 22px;
+
+      box-shadow:
+        0 10px 24px rgba(79, 70, 229, 0.22);
+    }
+
+    .teacher-name {
+      font-size: 18px;
+      font-weight: 800;
+    }
+
+    .teacher-subtitle {
+      margin-top: 3px;
+
+      color: var(--muted);
+
+      font-size: 12px;
+    }
+
+    .ready-badge {
+      padding: 7px 11px;
+
+      border-radius: 999px;
+
+      background: #ecfdf3;
+
+      color: #15803d;
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .workspace-body {
+      padding: 28px 30px 32px;
+    }
+
+    /* =========================
+       SUBJECT
+    ========================= */
+
+    .field-label {
       display: block;
-      width: 100%;
-      max-width: 100%;
-      height: auto;
-      max-height: 500px;
-      object-fit: contain;
-      border-radius: 12px;
-    }
 
-    .ad-placeholder {
-      padding: 20px 10px;
-    }
-
-    .ad-placeholder h3 {
-      margin-left: 0;
-      margin-right: 0;
-    }
-
-    .ad-placeholder p {
-      margin-left: 0;
-      margin-right: 0;
-    }
-
-    .teacher-card {
-      background: white;
-      border-radius: 20px;
-      padding: 30px;
-      box-shadow: 0 8px 30px rgba(0,0,0,0.08);
-    }
-
-    .teacher-header {
-      margin-bottom: 25px;
-    }
-
-    .teacher-header h2 {
-      color: #183b0e;
-      margin-bottom: 7px;
-    }
-
-    .teacher-header p {
-      color: #777;
-      font-size: 14px;
-    }
-
-    label {
-      display: block;
-      font-weight: bold;
       margin-bottom: 8px;
-      font-size: 14px;
+
+      color: #344054;
+
+      font-size: 12px;
+      font-weight: 800;
     }
 
-    select,
-    textarea {
+    .subject-select-wrap {
+      position: relative;
+    }
+
+    .subject-select {
       width: 100%;
-      border: 1px solid #d5ddd4;
-      border-radius: 10px;
-      padding: 13px;
-      font-size: 15px;
-      outline: none;
+
+      padding: 14px 16px;
+
+      border: 1px solid #dfe3eb;
+
+      border-radius: 13px;
+
       background: white;
+
+      color: #1d2939;
+
+      outline: none;
+
+      cursor: pointer;
+
+      transition:
+        border 0.2s,
+        box-shadow 0.2s;
     }
 
-    select:focus,
-    textarea:focus {
-      border-color: #2f6418;
+    .subject-select:focus {
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 4px rgba(79, 70, 229, 0.10);
     }
 
-    textarea {
+    /* =========================
+       SUBJECT HELP
+    ========================= */
+
+    .subject-help {
+      margin-top: 13px;
+
+      padding: 15px 17px;
+
+      border: 1px solid #e1e4ff;
+
+      border-radius: 14px;
+
+      background:
+        linear-gradient(
+          135deg,
+          #f7f8ff,
+          #faf7ff
+        );
+    }
+
+    .subject-help-title {
+      color: #3730a3;
+
+      font-size: 13px;
+      font-weight: 800;
+    }
+
+    .subject-help-text {
+      margin-top: 5px;
+
+      color: #667085;
+
+      font-size: 12px;
+
+      line-height: 1.55;
+    }
+
+    .subject-help-email {
+      display: inline-block;
+
+      margin-top: 8px;
+
+      color: var(--primary);
+
+      font-size: 12px;
+      font-weight: 750;
+    }
+
+    .subject-help-email:hover {
+      text-decoration: underline;
+    }
+
+    /* =========================
+       QUESTION
+    ========================= */
+
+    .question-section {
+      margin-top: 24px;
+    }
+
+    .question-wrap {
+      position: relative;
+    }
+
+    .question-input {
+      width: 100%;
+
       min-height: 150px;
+
       resize: vertical;
+
+      padding: 17px 18px;
+
+      border: 1px solid #dfe3eb;
+
+      border-radius: 16px;
+
+      background: #fff;
+
+      color: #172033;
+
+      outline: none;
+
+      line-height: 1.6;
+
+      font-size: 14px;
+
+      transition:
+        border 0.2s,
+        box-shadow 0.2s;
     }
 
-    .field {
-      margin-bottom: 20px;
+    .question-input::placeholder {
+      color: #98a2b3;
     }
+
+    .question-input:focus {
+      border-color: var(--primary);
+
+      box-shadow:
+        0 0 0 4px rgba(79, 70, 229, 0.09);
+    }
+
+    .question-hint {
+      margin-top: 8px;
+
+      color: #98a2b3;
+
+      font-size: 11px;
+    }
+
+    /* =========================
+       ASK BUTTON
+    ========================= */
 
     .ask-button {
       width: 100%;
+
+      margin-top: 17px;
+
+      padding: 15px 18px;
+
       border: none;
-      background: #2f6418;
+
+      border-radius: 14px;
+
+      background:
+        linear-gradient(
+          100deg,
+          #4f46e5,
+          #6d45df,
+          #7c3aed
+        );
+
       color: white;
-      padding: 15px;
-      border-radius: 10px;
-      font-size: 16px;
-      font-weight: bold;
+
+      font-size: 14px;
+      font-weight: 800;
+
       cursor: pointer;
+
+      box-shadow:
+        0 12px 25px rgba(79, 70, 229, 0.22);
+
+      transition:
+        transform 0.2s,
+        box-shadow 0.2s,
+        opacity 0.2s;
     }
 
     .ask-button:hover {
-      background: #245112;
+      transform: translateY(-2px);
+
+      box-shadow:
+        0 16px 30px rgba(79, 70, 229, 0.27);
+    }
+
+    .ask-button:active {
+      transform: translateY(0);
     }
 
     .ask-button:disabled {
-      opacity: 0.6;
-      cursor: not-allowed;
+      opacity: 0.65;
+
+      cursor: wait;
+
+      transform: none;
     }
+
+    /* =========================
+       STATUS
+    ========================= */
 
     .status {
-      text-align: center;
-      margin: 15px 0;
-      font-size: 14px;
-      color: #666;
       min-height: 20px;
+
+      margin-top: 12px;
+
+      text-align: center;
+
+      color: #667085;
+
+      font-size: 11px;
     }
 
-    .answer-container {
-      margin-top: 20px;
+    /* =========================
+       ANSWER
+    ========================= */
+
+    .result-card {
+      margin-top: 22px;
+
+      padding: 21px;
+
+      border-radius: 18px;
+
+      border: 1px solid #e6e8f0;
+
+      background: #fff;
     }
 
-    .answer-title {
-      font-weight: bold;
-      margin-bottom: 10px;
-      color: #183b0e;
+    .result-card.hidden {
+      display: none;
     }
 
-    .answer {
-      background: #f8faf8;
-      border: 1px solid #dfe7df;
-      border-radius: 12px;
-      padding: 20px;
-      line-height: 1.7;
-      white-space: pre-wrap;
-      min-height: 80px;
-      color: #263326;
+    .result-heading {
+      display: flex;
+      align-items: center;
+      gap: 9px;
+
+      margin-bottom: 13px;
+
+      font-size: 13px;
+      font-weight: 800;
     }
 
-    .source-info {
-      margin-top: 20px;
-      padding: 16px;
-      background: #f0f7ed;
-      border-left: 4px solid #2f6418;
-      border-radius: 8px;
+    .result-icon {
+      width: 30px;
+      height: 30px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 9px;
+
+      background: #eef2ff;
+
+      color: var(--primary);
+    }
+
+    .answer-content {
+      color: #344054;
+
       font-size: 14px;
-      line-height: 1.6;
-      color: #405040;
+
+      line-height: 1.75;
+
+      white-space: pre-wrap;
     }
 
-    .source-info strong {
-      color: #245112;
+    /* =========================
+       SOURCE
+    ========================= */
+
+    .source-card {
+      margin-top: 13px;
+
+      padding: 15px 17px;
+
+      border-radius: 14px;
+
+      background: #fafafa;
+
+      border: 1px solid #eceef2;
     }
+
+    .source-title {
+      color: #667085;
+
+      font-size: 11px;
+      font-weight: 800;
+    }
+
+    .source-content {
+      margin-top: 6px;
+
+      color: #475467;
+
+      font-size: 11px;
+
+      line-height: 1.6;
+    }
+
+    /* =========================
+       FEATURES
+    ========================= */
 
     .features {
+      max-width: 1100px;
+
+      margin: 0 auto;
+
+      padding: 0 22px 75px;
+
       display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: 10px;
-      margin-top: 20px;
+
+      grid-template-columns:
+        repeat(3, 1fr);
+
+      gap: 18px;
     }
 
     .feature {
-      background: #f7f9f7;
-      border-radius: 10px;
-      padding: 13px;
-      text-align: center;
-      font-size: 13px;
+      padding: 24px;
+
+      border-radius: 20px;
+
+      background: rgba(255, 255, 255, 0.88);
+
+      border: 1px solid var(--border);
+
+      box-shadow: var(--shadow-sm);
+
+      transition: 0.25s;
     }
+
+    .feature:hover {
+      transform: translateY(-4px);
+
+      box-shadow: var(--shadow);
+    }
+
+    .feature-icon {
+      width: 42px;
+      height: 42px;
+
+      display: flex;
+      align-items: center;
+      justify-content: center;
+
+      border-radius: 12px;
+
+      background: #eef2ff;
+
+      font-size: 19px;
+    }
+
+    .feature h3 {
+      margin: 15px 0 6px;
+
+      font-size: 15px;
+    }
+
+    .feature p {
+      margin: 0;
+
+      color: var(--muted);
+
+      font-size: 12px;
+
+      line-height: 1.65;
+    }
+
+    /* =========================
+       FOOTER
+    ========================= */
 
     footer {
+      padding: 48px 20px 35px;
+
       text-align: center;
-      padding: 30px 20px;
-      color: #777;
-      font-size: 13px;
+
+      color: white;
+
+      background:
+        linear-gradient(
+          135deg,
+          #111827 0%,
+          #1e1b4b 52%,
+          #312e81 100%
+        );
     }
 
-    @media (max-width: 1000px) {
-      .main-container {
-        grid-template-columns: 1fr;
-        max-width: 800px;
+    .footer-brand {
+      font-size: 22px;
+
+      font-weight: 850;
+
+      letter-spacing: -0.5px;
+    }
+
+    .footer-caption {
+      margin-top: 9px;
+
+      color: #c7d2fe;
+
+      font-size: 15px;
+
+      font-weight: 650;
+    }
+
+    .footer-copy {
+      margin-top: 8px;
+
+      color: #aeb7c8;
+
+      font-size: 12px;
+    }
+
+    .footer-line {
+      width: 70px;
+
+      height: 1px;
+
+      margin: 22px auto;
+
+      background: rgba(255, 255, 255, 0.18);
+    }
+
+    .footer-small {
+      color: #8993a6;
+
+      font-size: 11px;
+    }
+
+    /* =========================
+       LOADING
+    ========================= */
+
+    .loading-dots::after {
+      content: "";
+
+      animation:
+        dots 1.2s infinite;
+    }
+
+    @keyframes dots {
+      0% {
+        content: "";
       }
 
-      .ad {
-        position: static;
+      33% {
+        content: ".";
       }
 
-      .ad-left,
-      .ad-right {
-        display: none;
+      66% {
+        content: "..";
+      }
+
+      100% {
+        content: "...";
       }
     }
 
-    @media (max-width: 600px) {
+    /* =========================
+       RESPONSIVE
+    ========================= */
+
+    @media (max-width: 1050px) {
+      .main-layout {
+        grid-template-columns:
+          150px
+          minmax(0, 1fr)
+          150px;
+
+        gap: 14px;
+      }
+
+      .ad-image,
+      .ad-empty {
+        height: 190px;
+        min-height: 190px;
+      }
+    }
+
+    @media (max-width: 850px) {
       .navbar {
-        padding: 15px 18px;
+        padding: 0 20px;
       }
 
-      .nav-text {
+      .nav-email {
         display: none;
       }
 
-      .hero h1 {
-        font-size: 31px;
+      .main-layout {
+        grid-template-columns: 1fr;
+
+        max-width: 760px;
       }
 
-      .teacher-card {
-        padding: 20px;
+      .ad-column {
+        display: none;
       }
 
       .features {
         grid-template-columns: 1fr;
+
+        max-width: 760px;
+      }
+
+      .hero {
+        padding-top: 50px;
+      }
+
+      .hero h1 {
+        letter-spacing: -2px;
+      }
+    }
+
+    @media (max-width: 560px) {
+      .navbar {
+        height: 64px;
+      }
+
+      .brand {
+        font-size: 18px;
+      }
+
+      .brand-icon {
+        width: 36px;
+        height: 36px;
+      }
+
+      .nav-status {
+        font-size: 10px;
+      }
+
+      .hero {
+        padding: 42px 18px 35px;
+      }
+
+      .hero h1 {
+        font-size: 40px;
+
+        line-height: 1.05;
+      }
+
+      .hero-description {
+        font-size: 14px;
+      }
+
+      .main-layout {
+        padding: 5px 12px 45px;
+      }
+
+      .workspace {
+        border-radius: 21px;
+      }
+
+      .workspace-top {
+        padding: 22px 20px;
+      }
+
+      .workspace-body {
+        padding: 22px 20px 25px;
+      }
+
+      .workspace-title-row {
+        align-items: flex-start;
+      }
+
+      .ready-badge {
+        display: none;
+      }
+
+      .teacher-avatar {
+        width: 43px;
+        height: 43px;
+      }
+
+      .teacher-name {
+        font-size: 16px;
+      }
+
+      .question-input {
+        min-height: 135px;
+      }
+
+      .features {
+        padding: 0 12px 55px;
       }
     }
   </style>
@@ -362,47 +1128,82 @@
 
 <body>
 
+  <!-- =========================
+       NAVBAR
+  ========================== -->
+
   <nav class="navbar">
 
-    <div class="logo">
-      AI<span>Teacher</span>
-    </div>
+    <a href="/" class="brand">
 
-    <div class="nav-text">
-      Learn • Ask • Understand
+      <div class="brand-icon">
+        🎓
+      </div>
+
+      <div class="brand-text">
+        AI Teacher
+      </div>
+
+    </a>
+
+    <div class="nav-right">
+
+      <a
+        class="nav-email"
+        href="mailto:websiteaichatbot@gmail.com"
+      >
+        websiteaichatbot@gmail.com
+      </a>
+
+      <div class="nav-status">
+        <span class="status-dot"></span>
+        AI Online
+      </div>
+
     </div>
 
   </nav>
 
 
+  <!-- =========================
+       HERO
+  ========================== -->
+
   <section class="hero">
 
-    <div class="badge">
-      ✨ AI-POWERED LEARNING
+    <div class="hero-badge">
+      ✨ AI-powered learning platform
     </div>
 
     <h1>
-      Learn Smarter with Your
-      <span>AI Teacher</span>
+      Learn
+      <span class="gradient">Smarter.</span>
+      <br />
+      Learn with AI Teacher.
     </h1>
 
-    <p>
-      Ask questions from your books and get clear,
-      focused answers instantly.
+    <p class="hero-description">
+      Ask questions from your textbooks and study materials.
+      AI Teacher finds the relevant content and explains it
+      in a simple, student-friendly way.
     </p>
 
-    <div class="pills">
+    <div class="hero-pills">
 
-      <div class="pill">
-        📚 Your Books
+      <div class="hero-pill">
+        📚 Textbook Learning
       </div>
 
-      <div class="pill">
+      <div class="hero-pill">
         🤖 AI Answers
       </div>
 
-      <div class="pill">
-        ⚡ Learn Faster
+      <div class="hero-pill">
+        🔎 Smart Search
+      </div>
+
+      <div class="hero-pill">
+        🎯 Student Friendly
       </div>
 
     </div>
@@ -410,126 +1211,206 @@
   </section>
 
 
-  <main class="main-container">
+  <!-- =========================
+       MAIN
+  ========================== -->
 
-    <!-- LEFT AD -->
+  <main class="main-layout">
 
-    <aside
-      id="leftAd"
-      class="ad ad-left"
-    >
 
-      <div class="ad-placeholder">
+    <!-- LEFT ADS -->
 
-        <h3>
-          🎓 Master AI & Data Structures
-        </h3>
+    <aside class="ad-column">
 
-        <p>
-          Learn technical subjects with
-          your personal AI Teacher.
-        </p>
+      <div class="ad-label">
+        Advertisement
+      </div>
 
-        <button>
-          START LEARNING →
-        </button>
-
+      <div
+        id="leftAd"
+        class="ad-card"
+      >
+        <div class="ad-empty">
+          Advertisement
+        </div>
       </div>
 
     </aside>
 
 
-    <!-- AI TEACHER -->
+    <!-- AI WORKSPACE -->
 
-    <section class="teacher-card">
+    <section class="workspace">
 
-      <div class="teacher-header">
+      <div class="workspace-top">
 
-        <h2>
-          🤖 Ask Your AI Teacher
-        </h2>
+        <div class="workspace-title-row">
 
-        <p>
-          Select your subject and ask a question
-          from the uploaded textbook.
-        </p>
+          <div class="teacher-title">
 
-      </div>
+            <div class="teacher-avatar">
+              🤖
+            </div>
 
+            <div>
 
-      <div class="field">
+              <div class="teacher-name">
+                AI Teacher
+              </div>
 
-        <label for="subject">
-          📚 Select Subject
-        </label>
+              <div class="teacher-subtitle">
+                Your intelligent study assistant
+              </div>
 
-        <select id="subject">
+            </div>
 
-          <option value="">
-            Loading subjects...
-          </option>
+          </div>
 
-        </select>
+          <div class="ready-badge">
+            READY
+          </div>
 
-      </div>
-
-
-      <div class="field">
-
-        <label for="question">
-          ❓ Your Question
-        </label>
-
-        <textarea
-          id="question"
-          placeholder="Example: Explain AVL Tree for 10 marks."
-        ></textarea>
-
-      </div>
-
-
-      <button
-        id="ask"
-        class="ask-button"
-      >
-        Ask AI Teacher
-      </button>
-
-
-      <div
-        id="status"
-        class="status"
-      ></div>
-
-
-      <div class="answer-container">
-
-        <div class="answer-title">
-          🧑‍🏫 AI Teacher Answer
         </div>
+
+      </div>
+
+
+      <div class="workspace-body">
+
+        <!-- SUBJECT -->
+
+        <label class="field-label" for="subject">
+          Select your subject
+        </label>
+
+        <div class="subject-select-wrap">
+
+          <select
+            id="subject"
+            class="subject-select"
+          >
+
+            <option value="">
+              Loading subjects...
+            </option>
+
+          </select>
+
+        </div>
+
+
+        <!-- SUBJECT HELP -->
+
+        <div class="subject-help">
+
+          <div class="subject-help-title">
+            📚 Can't find your subject?
+          </div>
+
+          <div class="subject-help-text">
+            If your textbook or subject is not available,
+            contact us. Our team will review your request
+            and upload the textbook.
+          </div>
+
+          <a
+            class="subject-help-email"
+            href="mailto:websiteaichatbot@gmail.com"
+          >
+            websiteaichatbot@gmail.com
+          </a>
+
+        </div>
+
+
+        <!-- QUESTION -->
+
+        <div class="question-section">
+
+          <label
+            class="field-label"
+            for="question"
+          >
+            What would you like to learn?
+          </label>
+
+          <div class="question-wrap">
+
+            <textarea
+              id="question"
+              class="question-input"
+              placeholder="Ask a question from your textbook..."
+            ></textarea>
+
+          </div>
+
+          <div class="question-hint">
+            Tip: Press Ctrl + Enter to ask quickly.
+          </div>
+
+        </div>
+
+
+        <!-- ASK -->
+
+        <button
+          id="askButton"
+          class="ask-button"
+          type="button"
+        >
+          ✨ Ask AI Teacher
+        </button>
+
+
+        <!-- STATUS -->
 
         <div
-          id="answer"
-          class="answer"
+          id="status"
+          class="status"
+        ></div>
+
+
+        <!-- ANSWER -->
+
+        <div
+          id="answerCard"
+          class="result-card hidden"
         >
-          Ask a question to get started.
+
+          <div class="result-heading">
+
+            <div class="result-icon">
+              💡
+            </div>
+
+            AI Teacher's Answer
+
+          </div>
+
+          <div
+            id="answer"
+            class="answer-content"
+          ></div>
+
         </div>
 
-      </div>
 
+        <!-- SOURCE -->
 
-      <div class="features">
+        <div
+          id="sourceCard"
+          class="source-card hidden"
+        >
 
-        <div class="feature">
-          📖 Textbook Based
-        </div>
+          <div class="source-title">
+            📖 Source
+          </div>
 
-        <div class="feature">
-          🎯 Relevant Answers
-        </div>
+          <div
+            id="source"
+            class="source-content"
+          ></div>
 
-        <div class="feature">
-          📄 Page References
         </div>
 
       </div>
@@ -537,28 +1418,21 @@
     </section>
 
 
-    <!-- RIGHT AD -->
+    <!-- RIGHT ADS -->
 
-    <aside
-      id="rightAd"
-      class="ad ad-right"
-    >
+    <aside class="ad-column">
 
-      <div class="ad-placeholder">
+      <div class="ad-label">
+        Advertisement
+      </div>
 
-        <h3>
-          💻 Build Your Tech Future
-        </h3>
-
-        <p>
-          Improve your programming,
-          data structures and technology skills.
-        </p>
-
-        <button>
-          EXPLORE COURSES →
-        </button>
-
+      <div
+        id="rightAd"
+        class="ad-card"
+      >
+        <div class="ad-empty">
+          Advertisement
+        </div>
       </div>
 
     </aside>
@@ -566,305 +1440,543 @@
   </main>
 
 
+  <!-- =========================
+       FEATURES
+  ========================== -->
+
+  <section class="features">
+
+    <div class="feature">
+
+      <div class="feature-icon">
+        📚
+      </div>
+
+      <h3>
+        Study Material
+      </h3>
+
+      <p>
+        Learn directly from your available textbooks
+        and study materials.
+      </p>
+
+    </div>
+
+
+    <div class="feature">
+
+      <div class="feature-icon">
+        🔎
+      </div>
+
+      <h3>
+        Smart Retrieval
+      </h3>
+
+      <p>
+        AI finds relevant information before generating
+        the answer.
+      </p>
+
+    </div>
+
+
+    <div class="feature">
+
+      <div class="feature-icon">
+        🧠
+      </div>
+
+      <h3>
+        Simple Learning
+      </h3>
+
+      <p>
+        Get clear explanations designed to make difficult
+        concepts easier to understand.
+      </p>
+
+    </div>
+
+  </section>
+
+
+  <!-- =========================
+       FOOTER
+  ========================== -->
+
   <footer>
-    © 2026 AI Teacher • Learn Smarter with AI
+
+    <div class="footer-brand">
+      AI Teacher
+    </div>
+
+    <div class="footer-caption">
+      Learn better. Understand faster. Grow smarter.
+    </div>
+
+    <div class="footer-copy">
+      AI-powered learning from your textbooks and study materials.
+    </div>
+
+    <div class="footer-line"></div>
+
+    <div class="footer-small">
+      © 2026 AI Teacher. All rights reserved.
+    </div>
+
   </footer>
 
 
+  <!-- =========================
+       JAVASCRIPT
+  ========================== -->
+
   <script>
 
-    /*
-     * ==========================================
-     * API CONFIGURATION
-     * ==========================================
-     */
-
     const API_BASE =
-      window.location.hostname === 'localhost' ||
-      window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:3000'
-        : 'https://ai-teacher-backend-6htm.onrender.com';
+      window.location.hostname === "localhost" ||
+      window.location.hostname === "127.0.0.1"
+        ? "http://localhost:3000"
+        : "https://ai-teacher-backend-6htm.onrender.com";
 
 
-    /*
-     * ==========================================
-     * ELEMENTS
-     * ==========================================
-     */
+    const subjectSelect =
+      document.getElementById("subject");
 
-    const subject =
-      document.getElementById('subject');
+    const questionInput =
+      document.getElementById("question");
 
-    const question =
-      document.getElementById('question');
+    const askButton =
+      document.getElementById("askButton");
 
-    const ask =
-      document.getElementById('ask');
+    const statusBox =
+      document.getElementById("status");
 
-    const answer =
-      document.getElementById('answer');
+    const answerCard =
+      document.getElementById("answerCard");
 
-    const status =
-      document.getElementById('status');
+    const answerBox =
+      document.getElementById("answer");
+
+    const sourceCard =
+      document.getElementById("sourceCard");
+
+    const sourceBox =
+      document.getElementById("source");
 
     const leftAd =
-      document.getElementById('leftAd');
+      document.getElementById("leftAd");
 
     const rightAd =
-      document.getElementById('rightAd');
+      document.getElementById("rightAd");
 
 
-    let selectedSubject = '';
-
-
-    /*
-     * ==========================================
-     * LOAD ADVERTISEMENTS
-     * ==========================================
-     *
-     * Public endpoint:
-     * GET /api/ads
-     *
-     * No admin token is required.
-     */
-
-    async function loadAdvertisements() {
-
-      try {
-
-        const response =
-          await fetch(
-            API_BASE + '/api/ads'
-          );
-
-
-        if (!response.ok) {
-
-          throw new Error(
-            'Could not load advertisements'
-          );
-
-        }
-
-
-        const ads =
-          await response.json();
-
-
-        console.log(
-          'Advertisements:',
-          ads
-        );
-
-
-        if (
-          !Array.isArray(ads)
-        ) {
-
-          return;
-
-        }
-
-
-        const left =
-          ads.find(
-            function (ad) {
-
-              return (
-                ad.position === 'left' &&
-                ad.active !== false &&
-                ad.image_url
-              );
-
-            }
-          );
-
-
-        const right =
-          ads.find(
-            function (ad) {
-
-              return (
-                ad.position === 'right' &&
-                ad.active !== false &&
-                ad.image_url
-              );
-
-            }
-          );
-
-
-        renderAdvertisement(
-          leftAd,
-          left,
-          'left'
-        );
-
-
-        renderAdvertisement(
-          rightAd,
-          right,
-          'right'
-        );
-
-
-      }
-
-      catch (error) {
-
-        console.error(
-          'ADVERTISEMENT ERROR:',
-          error
-        );
-
-        /*
-         * If ads fail, keep the original
-         * placeholder advertisements.
-         */
-
-      }
-
-    }
-
-
-    /*
-     * ==========================================
-     * RENDER ONE ADVERTISEMENT
-     * ==========================================
-     */
-
-    function renderAdvertisement(
-      container,
-      ad,
-      position
-    ) {
-
-      if (
-        !container
-      ) {
-
-        return;
-
-      }
-
-
-      if (
-        !ad ||
-        !ad.image_url
-      ) {
-
-        return;
-
-      }
-
-
-      container.innerHTML = '';
-
-
-      const image =
-        document.createElement('img');
-
-
-      image.className =
-        'dynamic-ad-image';
-
-
-      image.src =
-        ad.image_url;
-
-
-      image.alt =
-        position === 'left'
-          ? 'Advertisement'
-          : 'Advertisement';
-
-
-      image.loading =
-        'lazy';
-
-
-      image.onerror =
-        function () {
-
-          console.error(
-            'Ad image failed:',
-            ad.image_url
-          );
-
-          container.innerHTML = '';
-
-        };
-
-
-      /*
-       * If admin entered a target URL,
-       * clicking the advertisement opens it.
-       */
-
-      if (
-        ad.target_url &&
-        String(ad.target_url).trim()
-      ) {
-
-        const link =
-          document.createElement('a');
-
-
-        link.className =
-          'dynamic-ad-link';
-
-
-        link.href =
-          ad.target_url;
-
-
-        link.target =
-          '_blank';
-
-
-        link.rel =
-          'noopener noreferrer';
-
-
-        link.appendChild(
-          image
-        );
-
-
-        container.appendChild(
-          link
-        );
-
-      }
-
-      else {
-
-        container.appendChild(
-          image
-        );
-
-      }
-
-    }
-
-
-    /*
-     * ==========================================
-     * LOAD SUBJECTS
-     * ==========================================
-     */
+    /* =========================
+       LOAD SUBJECTS
+    ========================== */
 
     async function loadSubjects() {
 
       try {
 
-        status.textContent =
-          'Loading subjects...';
+        const response =
+          await fetch(
+            `${API_BASE}/api/subjects`
+          );
 
+        if (!response.ok) {
+          throw new Error(
+            "Could not load subjects"
+          );
+        }
+
+        const subjects =
+          await response.json();
+
+        subjectSelect.innerHTML = "";
+
+        if (
+          !subjects ||
+          subjects.length === 0
+        ) {
+
+          const option =
+            document.createElement("option");
+
+          option.value = "";
+
+          option.textContent =
+            "No subjects available";
+
+          subjectSelect.appendChild(option);
+
+          return;
+        }
+
+
+        const firstOption =
+          document.createElement("option");
+
+        firstOption.value = "";
+
+        firstOption.textContent =
+          "Choose a subject";
+
+        subjectSelect.appendChild(
+          firstOption
+        );
+
+
+        subjects.forEach(subject => {
+
+          const option =
+            document.createElement("option");
+
+          if (
+            typeof subject === "string"
+          ) {
+
+            option.value = subject;
+
+            option.textContent = subject;
+
+          } else {
+
+            option.value =
+              subject.id ||
+              subject.name ||
+              subject.subject ||
+              "";
+
+            option.textContent =
+              subject.name ||
+              subject.subject ||
+              subject.title ||
+              "Subject";
+
+          }
+
+          subjectSelect.appendChild(
+            option
+          );
+
+        });
+
+      } catch (error) {
+
+        console.error(
+          "SUBJECT ERROR:",
+          error
+        );
+
+        subjectSelect.innerHTML = "";
+
+        const option =
+          document.createElement("option");
+
+        option.value = "";
+
+        option.textContent =
+          "Subjects temporarily unavailable";
+
+        subjectSelect.appendChild(option);
+
+      }
+
+    }
+
+
+    /* =========================
+       LOAD ADS
+    ========================== */
+
+    async function loadAds() {
+
+      try {
 
         const response =
           await fetch(
-            API_BASE + '/api/subjects'
+            `${API_BASE}/api/ads`
+          );
+
+        if (!response.ok) {
+          throw new Error(
+            "Could not load ads"
+          );
+        }
+
+        const ads =
+          await response.json();
+
+        if (!Array.isArray(ads)) {
+          return;
+        }
+
+
+        const left =
+          ads.find(
+            ad =>
+              String(ad.position)
+                .toLowerCase() === "left"
+          );
+
+
+        const right =
+          ads.find(
+            ad =>
+              String(ad.position)
+                .toLowerCase() === "right"
+          );
+
+
+        renderAd(
+          leftAd,
+          left
+        );
+
+        renderAd(
+          rightAd,
+          right
+        );
+
+      } catch (error) {
+
+        console.error(
+          "ADS ERROR:",
+          error
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       RENDER AD
+    ========================== */
+
+    function renderAd(
+      container,
+      ad
+    ) {
+
+      if (!container) {
+        return;
+      }
+
+      if (!ad) {
+
+        container.innerHTML = `
+          <div class="ad-empty">
+            Advertisement
+          </div>
+        `;
+
+        return;
+      }
+
+
+      const imageUrl =
+        ad.image_url ||
+        ad.imageUrl ||
+        "";
+
+
+      if (!imageUrl) {
+
+        container.innerHTML = `
+          <div class="ad-empty">
+            Advertisement
+          </div>
+        `;
+
+        return;
+      }
+
+
+      const targetUrl =
+        ad.target_url ||
+        ad.targetUrl ||
+        "";
+
+
+      const image =
+        document.createElement("img");
+
+      image.className =
+        "ad-image";
+
+      image.src =
+        imageUrl;
+
+      image.alt =
+        "Advertisement";
+
+
+      image.onerror =
+        function () {
+
+          container.innerHTML = `
+            <div class="ad-empty">
+              Advertisement
+            </div>
+          `;
+
+        };
+
+
+      if (targetUrl) {
+
+        const link =
+          document.createElement("a");
+
+        link.href =
+          targetUrl;
+
+        link.target =
+          "_blank";
+
+        link.rel =
+          "noopener noreferrer";
+
+        link.appendChild(
+          image
+        );
+
+        container.innerHTML = "";
+
+        container.appendChild(
+          link
+        );
+
+      } else {
+
+        container.innerHTML = "";
+
+        container.appendChild(
+          image
+        );
+
+      }
+
+    }
+
+
+    /* =========================
+       SOURCE NAME
+    ========================== */
+
+    function getSourceName(data) {
+
+      return (
+        data.source ||
+        data.fileName ||
+        data.filename ||
+        data.document ||
+        data.book ||
+        "Study material"
+      );
+
+    }
+
+
+    /* =========================
+       SOURCE PAGE
+    ========================== */
+
+    function getSourcePage(data) {
+
+      return (
+        data.page ||
+        data.pageNumber ||
+        data.sourcePage ||
+        ""
+      );
+
+    }
+
+
+    /* =========================
+       ASK AI TEACHER
+    ========================== */
+
+    async function askTeacher() {
+
+      const subject =
+        subjectSelect.value.trim();
+
+      const question =
+        questionInput.value.trim();
+
+
+      if (!subject) {
+
+        statusBox.textContent =
+          "Please select a subject.";
+
+        subjectSelect.focus();
+
+        return;
+      }
+
+
+      if (!question) {
+
+        statusBox.textContent =
+          "Please enter your question.";
+
+        questionInput.focus();
+
+        return;
+      }
+
+
+      askButton.disabled =
+        true;
+
+      askButton.innerHTML =
+        `Thinking<span class="loading-dots"></span>`;
+
+
+      statusBox.textContent =
+        "AI Teacher is searching your study material...";
+
+
+      answerCard.classList.add(
+        "hidden"
+      );
+
+      sourceCard.classList.add(
+        "hidden"
+      );
+
+      answerBox.textContent =
+        "";
+
+      sourceBox.textContent =
+        "";
+
+
+      try {
+
+        const response =
+          await fetch(
+            `${API_BASE}/api/ask`,
+            {
+              method: "POST",
+
+              headers: {
+                "Content-Type":
+                  "application/json"
+              },
+
+              body: JSON.stringify({
+                subject,
+                question
+              })
+            }
           );
 
 
@@ -872,552 +1984,149 @@
           await response.json();
 
 
-        console.log(
-          'Subjects:',
-          data
-        );
-
-
         if (!response.ok) {
 
           throw new Error(
             data.error ||
-            'Could not load subjects'
+            data.message ||
+            "AI Teacher could not answer."
           );
 
         }
 
 
-        subject.innerHTML =
-          '<option value="">Select a subject</option>';
+        const answer =
+          data.answer ||
+          data.response ||
+          data.text ||
+          "No answer was returned.";
 
 
-        if (
-          !Array.isArray(data) ||
-          data.length === 0
-        ) {
+        answerBox.textContent =
+          answer;
 
-          subject.innerHTML =
-            '<option value="">No subjects available</option>';
+        answerCard.classList.remove(
+          "hidden"
+        );
 
-          status.textContent =
-            'No subjects available.';
 
-          return;
+        const sourceName =
+          getSourceName(data);
+
+        const sourcePage =
+          getSourcePage(data);
+
+
+        let sourceText =
+          sourceName;
+
+
+        if (sourcePage) {
+
+          sourceText +=
+            ` • Page ${sourcePage}`;
 
         }
 
 
-        data.forEach(
-          function (item) {
+        if (
+          data.sources &&
+          Array.isArray(data.sources)
+        ) {
 
-            const option =
-              document.createElement('option');
+          sourceText =
+            data.sources
+              .map(item => {
+
+                const name =
+                  item.source ||
+                  item.fileName ||
+                  item.filename ||
+                  item.document ||
+                  "Study material";
+
+                const page =
+                  item.page ||
+                  item.pageNumber ||
+                  "";
+
+                return page
+                  ? `${name} • Page ${page}`
+                  : name;
+
+              })
+              .join("\n");
+
+        }
 
 
-            option.value =
-              item.id;
+        sourceBox.textContent =
+          sourceText;
 
-
-            option.textContent =
-              item.name;
-
-
-            subject.appendChild(
-              option
-            );
-
-          }
+        sourceCard.classList.remove(
+          "hidden"
         );
 
 
-        status.textContent =
-          'Ready.';
+        statusBox.textContent =
+          "Answer generated from your study material.";
 
-      }
-
-      catch (error) {
+      } catch (error) {
 
         console.error(
-          'SUBJECT ERROR:',
+          "ASK ERROR:",
           error
         );
 
 
-        subject.innerHTML =
-          '<option value="">Could not load subjects</option>';
+        answerBox.textContent =
+          error.message ||
+          "Something went wrong. Please try again.";
 
 
-        status.textContent =
-          'Could not connect to AI Teacher server.';
+        answerCard.classList.remove(
+          "hidden"
+        );
+
+
+        statusBox.textContent =
+          "Unable to get an answer right now.";
+
+      } finally {
+
+        askButton.disabled =
+          false;
+
+        askButton.innerHTML =
+          "✨ Ask AI Teacher";
 
       }
 
     }
 
 
-    /*
-     * ==========================================
-     * SUBJECT CHANGE
-     * ==========================================
-     */
+    /* =========================
+       EVENTS
+    ========================== */
 
-    subject.addEventListener(
-      'change',
-      function () {
-
-        selectedSubject =
-          this.value;
-
-      }
+    askButton.addEventListener(
+      "click",
+      askTeacher
     );
 
 
-    /*
-     * ==========================================
-     * SOURCE NAME
-     * ==========================================
-     */
-
-    function getSourceName(source) {
-
-      if (
-        typeof source === 'string'
-      ) {
-
-        return source;
-
-      }
-
-
-      if (
-        source &&
-        typeof source === 'object'
-      ) {
-
-        return (
-          source.name ||
-          source.subject ||
-          source.title ||
-          source.book ||
-          'Textbook'
-        );
-
-      }
-
-
-      return 'Textbook';
-
-    }
-
-
-    /*
-     * ==========================================
-     * SOURCE PAGES
-     * ==========================================
-     */
-
-    function getSourcePages(data) {
-
-      let pages = [];
-
-
-      if (
-        Array.isArray(data.sourcePages)
-      ) {
-
-        data.sourcePages.forEach(
-          function (item) {
-
-            if (
-              item &&
-              typeof item === 'object'
-            ) {
-
-              const page =
-                item.page ||
-                item.pageNumber ||
-                item.number;
-
-
-              if (
-                page !== undefined &&
-                page !== null
-              ) {
-
-                pages.push(
-                  String(page)
-                );
-
-              }
-
-            }
-
-            else if (
-              item !== undefined &&
-              item !== null
-            ) {
-
-              pages.push(
-                String(item)
-              );
-
-            }
-
-          }
-        );
-
-      }
-
-
-      if (
-        pages.length === 0 &&
-        data.source &&
-        typeof data.source === 'object'
-      ) {
-
-        const sourcePages =
-          data.source.pages ||
-          data.source.pageNumbers ||
-          data.source.page ||
-          data.source.pageNumber;
-
-
-        if (
-          Array.isArray(sourcePages)
-        ) {
-
-          sourcePages.forEach(
-            function (page) {
-
-              if (
-                page &&
-                typeof page === 'object'
-              ) {
-
-                const number =
-                  page.page ||
-                  page.pageNumber ||
-                  page.number;
-
-
-                if (
-                  number !== undefined &&
-                  number !== null
-                ) {
-
-                  pages.push(
-                    String(number)
-                  );
-
-                }
-
-              }
-
-              else if (
-                page !== undefined &&
-                page !== null
-              ) {
-
-                pages.push(
-                  String(page)
-                );
-
-              }
-
-            }
-          );
-
-        }
-
-        else if (
-          sourcePages !== undefined &&
-          sourcePages !== null
-        ) {
-
-          pages.push(
-            String(sourcePages)
-          );
-
-        }
-
-      }
-
-
-      pages = [
-        ...new Set(pages)
-      ];
-
-
-      pages.sort(
-        function (a, b) {
-
-          return Number(a) - Number(b);
-
-        }
-      );
-
-
-      return pages;
-
-    }
-
-
-    /*
-     * ==========================================
-     * DISPLAY SOURCE
-     * ==========================================
-     */
-
-    function displaySourceInfo(data) {
-
-      const sourceName =
-        getSourceName(
-          data.source
-        );
-
-
-      const pages =
-        getSourcePages(data);
-
-
-      const sourceInfo =
-        document.createElement('div');
-
-
-      sourceInfo.className =
-        'source-info';
-
-
-      let html =
-
-        '<strong>📚 Source</strong>' +
-        '<br>' +
-        sourceName;
-
-
-      if (
-        pages.length > 0
-      ) {
-
-        html +=
-
-          '<br><br>' +
-          '<strong>📄 Textbook page' +
-          (pages.length > 1 ? 's' : '') +
-          '</strong>' +
-          '<br>' +
-          pages.join(', ');
-
-      }
-
-      else {
-
-        html +=
-
-          '<br><br>' +
-          '<strong>📄 Textbook page</strong>' +
-          '<br>' +
-          'Page information not available';
-
-      }
-
-
-      sourceInfo.innerHTML =
-        html;
-
-
-      answer.appendChild(
-        sourceInfo
-      );
-
-    }
-
-
-    /*
-     * ==========================================
-     * ASK AI
-     * ==========================================
-     */
-
-    ask.addEventListener(
-      'click',
-      async function () {
-
-        const userQuestion =
-          question.value.trim();
-
-
-        selectedSubject =
-          subject.value;
-
-
-        if (
-          !selectedSubject
-        ) {
-
-          status.textContent =
-            'Please select a subject.';
-
-          return;
-
-        }
-
-
-        if (
-          !userQuestion
-        ) {
-
-          status.textContent =
-            'Please enter your question.';
-
-          return;
-
-        }
-
-
-        answer.textContent =
-          'Thinking...';
-
-
-        status.textContent =
-          'Searching textbook...';
-
-
-        ask.disabled =
-          true;
-
-
-        ask.textContent =
-          'Thinking...';
-
-
-        try {
-
-          const response =
-            await fetch(
-              API_BASE + '/api/ask',
-              {
-
-                method:
-                  'POST',
-
-                headers: {
-
-                  'Content-Type':
-                    'application/json'
-
-                },
-
-                body:
-                  JSON.stringify({
-
-                    subjectId:
-                      selectedSubject,
-
-                    question:
-                      userQuestion
-
-                  })
-
-              }
-            );
-
-
-          const data =
-            await response.json();
-
-
-          console.log(
-            'AI response:',
-            data
-          );
-
-
-          if (
-            !response.ok
-          ) {
-
-            throw new Error(
-              data.error ||
-              'Request failed'
-            );
-
-          }
-
-
-          /*
-           * Clear previous source box
-           */
-
-          answer.textContent =
-            data.answer ||
-            'No answer received.';
-
-
-          /*
-           * Add source + pages
-           */
-
-          displaySourceInfo(
-            data
-          );
-
-
-          status.textContent =
-            'Done.';
-
-        }
-
-        catch (error) {
-
-          console.error(
-            'ASK ERROR:',
-            error
-          );
-
-
-          answer.textContent =
-            'Error: ' +
-            error.message;
-
-
-          status.textContent =
-            'Could not connect to AI Teacher server.';
-
-        }
-
-        finally {
-
-          ask.disabled =
-            false;
-
-
-          ask.textContent =
-            'Ask AI Teacher';
-
-        }
-
-      }
-    );
-
-
-    /*
-     * ==========================================
-     * CTRL + ENTER
-     * ==========================================
-     */
-
-    question.addEventListener(
-      'keydown',
-      function (event) {
+    questionInput.addEventListener(
+      "keydown",
+      function(event) {
 
         if (
           event.ctrlKey &&
-          event.key === 'Enter'
+          event.key === "Enter"
         ) {
 
-          ask.click();
+          event.preventDefault();
+
+          askTeacher();
 
         }
 
@@ -1425,15 +2134,13 @@
     );
 
 
-    /*
-     * ==========================================
-     * START
-     * ==========================================
-     */
+    /* =========================
+       INITIAL LOAD
+    ========================== */
 
     loadSubjects();
 
-    loadAdvertisements();
+    loadAds();
 
   </script>
 
