@@ -1,552 +1,1756 @@
-
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-<meta charset="UTF-8">
-<meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>AI Teacher Admin</title>
+  <title>AI Teacher Admin</title>
 
-<style>
+  <style>
+    * {
+      box-sizing: border-box;
+    }
 
-* {
-  box-sizing: border-box;
-}
+    body {
+      margin: 0;
+      font-family: Arial, sans-serif;
+      background: #f4f7f2;
+      color: #222;
+    }
 
-body {
-  margin: 0;
-  font-family: Arial, sans-serif;
-  background: #f4f7fb;
-  color: #172033;
-}
+    header {
+      background: #2f6418;
+      color: white;
+      padding: 18px 25px;
+    }
 
-header {
-  background: #183153;
-  color: white;
-  text-align: center;
-  padding: 24px;
-}
+    header h1 {
+      margin: 0;
+      font-size: 24px;
+    }
 
-main {
-  max-width: 850px;
-  margin: 30px auto;
-  padding: 18px;
-}
+    header p {
+      margin: 5px 0 0;
+      opacity: 0.9;
+    }
 
-.card {
-  background: white;
-  padding: 24px;
-  border-radius: 16px;
-  box-shadow: 0 8px 30px #0001;
-  margin-bottom: 20px;
-}
+    .container {
+      max-width: 900px;
+      margin: 30px auto;
+      padding: 0 18px;
+    }
 
-input,
-button {
-  width: 100%;
-  padding: 13px;
-  margin: 8px 0;
-  border-radius: 9px;
-  border: 1px solid #ccd3df;
-  font-size: 15px;
-}
+    .card {
+      background: white;
+      border-radius: 12px;
+      padding: 25px;
+      margin-bottom: 20px;
+      box-shadow: 0 3px 12px rgba(0,0,0,0.08);
+    }
 
-button {
-  background: #183153;
-  color: white;
-  font-weight: bold;
-  cursor: pointer;
-  border: none;
-}
+    h2 {
+      margin-top: 0;
+      color: #2f6418;
+    }
 
-button:hover {
-  opacity: 0.9;
-}
+    h3 {
+      color: #333;
+      margin-top: 0;
+    }
 
-.item {
-  display: flex;
-  justify-content: space-between;
-  align-items: center;
-  gap: 12px;
-  padding: 14px;
-  border: 1px solid #ddd;
-  border-radius: 9px;
-  margin: 8px 0;
-}
+    label {
+      display: block;
+      font-weight: bold;
+      margin: 15px 0 7px;
+    }
 
-.delete {
-  width: auto;
-  background: #b42318;
-}
+    input[type="password"],
+    input[type="text"],
+    input[type="file"] {
+      width: 100%;
+      padding: 12px;
+      border: 1px solid #ccc;
+      border-radius: 7px;
+      font-size: 15px;
+    }
 
-.success {
-  color: green;
-}
+    button {
+      border: 0;
+      border-radius: 7px;
+      padding: 12px 18px;
+      background: #2f6418;
+      color: white;
+      font-size: 15px;
+      cursor: pointer;
+      margin-top: 15px;
+    }
 
-.error {
-  color: #b42318;
-}
+    button:hover {
+      opacity: 0.9;
+    }
 
-</style>
+    button.danger {
+      background: #b42318;
+    }
 
+    button.secondary {
+      background: #555;
+    }
+
+    .status {
+      margin-top: 15px;
+      padding: 12px;
+      border-radius: 7px;
+      display: none;
+      white-space: pre-wrap;
+    }
+
+    .success {
+      background: #e8f7e5;
+      color: #256018;
+    }
+
+    .error {
+      background: #fdecec;
+      color: #a00000;
+    }
+
+    .info {
+      background: #eef5ff;
+      color: #174a8b;
+    }
+
+    .subject {
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      padding: 15px;
+      margin-top: 12px;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      gap: 15px;
+    }
+
+    .subject-name {
+      font-weight: bold;
+      font-size: 16px;
+    }
+
+    .subject-id {
+      font-size: 12px;
+      color: #777;
+      margin-top: 5px;
+      word-break: break-all;
+    }
+
+    .subject button {
+      margin-top: 0;
+      white-space: nowrap;
+    }
+
+    .hidden {
+      display: none !important;
+    }
+
+    .logout-area {
+      text-align: right;
+      margin-bottom: 15px;
+    }
+
+    .limit-note {
+      color: #666;
+      font-size: 13px;
+      margin-top: 7px;
+    }
+
+    /* =========================
+       ADS
+    ========================= */
+
+    .ads-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+
+    .ad-box {
+      border: 1px solid #ddd;
+      border-radius: 10px;
+      padding: 18px;
+      background: #fafafa;
+    }
+
+    .ad-preview {
+      width: 100%;
+      min-height: 180px;
+      border: 2px dashed #ccc;
+      border-radius: 8px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      overflow: hidden;
+      background: #fff;
+      margin-bottom: 12px;
+      color: #888;
+      text-align: center;
+    }
+
+    .ad-preview img {
+      width: 100%;
+      max-height: 260px;
+      object-fit: contain;
+      display: block;
+    }
+
+    .ad-url {
+      font-size: 13px;
+      color: #666;
+      word-break: break-all;
+      margin-top: 8px;
+    }
+
+    .ad-actions {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+    }
+
+    .ad-actions button {
+      margin-top: 10px;
+    }
+
+    .delete-ad {
+      background: #b42318;
+    }
+
+    @media (max-width: 700px) {
+
+      .ads-grid {
+        grid-template-columns: 1fr;
+      }
+
+    }
+
+    @media (max-width: 650px) {
+
+      .subject {
+        flex-direction: column;
+        align-items: flex-start;
+      }
+
+      .subject button {
+        width: 100%;
+      }
+
+    }
+  </style>
 </head>
 
 <body>
 
 <header>
-
-<h1>AI Teacher Admin</h1>
-
-<p>Private subject &amp; book management</p>
-
+  <h1>AI Teacher Admin</h1>
+  <p>Manage courses, textbook PDFs and advertisements</p>
 </header>
 
-<main>
+<div class="container">
 
-<!-- LOGIN -->
+  <!-- LOGIN -->
+  <div id="loginCard" class="card">
 
-<div class="card" id="loginBox">
+    <h2>Admin Login</h2>
 
-<h2>Admin Login</h2>
+    <label for="password">
+      Admin Password
+    </label>
 
-<input
-id="pw"
-type="password"
-placeholder="Enter admin password"
->
+    <input
+      id="password"
+      type="password"
+      placeholder="Enter admin password"
+    >
 
-<button onclick="login()">
-Login
-</button>
+    <button onclick="login()">
+      Login
+    </button>
 
-<p id="loginMsg"></p>
+    <div id="loginStatus" class="status"></div>
 
-</div>
+  </div>
 
 
-<!-- ADMIN PANEL -->
+  <!-- ADMIN PANEL -->
+  <div id="adminPanel" class="hidden">
 
-<div id="panel" style="display:none;">
+    <div class="logout-area">
 
-<div class="card">
+      <button
+        class="secondary"
+        onclick="logout()"
+      >
+        Logout
+      </button>
 
-<h2>Add Subject &amp; Book</h2>
+    </div>
 
-<input
-id="name"
-type="text"
-placeholder="Subject name, e.g. Data Structures"
->
 
-<input
-id="book"
-type="file"
-accept="application/pdf,.pdf"
->
+    <!-- =========================
+         COURSE PDF
+    ========================== -->
 
-<button onclick="uploadBook()">
-Upload &amp; Save Book
-</button>
+    <div class="card">
 
-<p id="uploadMsg"></p>
+      <h2>Upload Course PDF</h2>
 
-</div>
+      <label for="name">
+        Course / Subject Name
+      </label>
 
+      <input
+        id="name"
+        type="text"
+        placeholder="Example: Java Developer"
+      >
 
-<!-- SAVED SUBJECTS -->
+      <label for="book">
+        Course PDF
+      </label>
 
-<div class="card">
+      <input
+        id="book"
+        name="book"
+        type="file"
+        accept="application/pdf,.pdf"
+      >
 
-<h2>Saved Subjects</h2>
+      <div class="limit-note">
+        Maximum PDF size: 100 MB
+      </div>
 
-<div id="list">
-No subjects saved yet.
-</div>
+      <button onclick="uploadBook()">
+        Upload PDF
+      </button>
 
-</div>
+      <div id="uploadStatus" class="status"></div>
 
-</div>
+    </div>
 
-</main>
 
+    <!-- =========================
+         ADVERTISEMENT MANAGEMENT
+    ========================== -->
 
-<script>
+    <div class="card">
 
-/* =========================================
-   RENDER BACKEND
-========================================= */
+      <h2>Advertisement Management</h2>
 
-const API_BASE =
-  "https://ai-teacher-backend-6htm.onrender.com";
+      <p class="limit-note">
+        Upload advertisements that will appear on the left and right
+        sides of the AI Teacher page.
+      </p>
 
+      <div class="ads-grid">
 
-let token = "";
 
+        <!-- LEFT AD -->
 
-/* =========================
-   LOGIN
-========================= */
-
-async function login() {
-
-  const password =
-    document.getElementById("pw").value.trim();
-
-  const loginMsg =
-    document.getElementById("loginMsg");
-
-  if (!password) {
-
-    loginMsg.textContent =
-      "Please enter admin password.";
-
-    return;
-  }
-
-  try {
-
-    const response = await fetch(
-      `${API_BASE}/api/admin/login`,
-      {
-        method: "POST",
-
-        headers: {
-          "Content-Type": "application/json"
-        },
-
-        body: JSON.stringify({
-          password: password
-        })
-      }
-    );
-
-    const data = await response.json();
-
-    if (!response.ok) {
-
-      loginMsg.textContent =
-        data.error || "Login failed.";
-
-      return;
-    }
-
-    token = data.token;
-
-    document.getElementById("loginBox")
-      .style.display = "none";
-
-    document.getElementById("panel")
-      .style.display = "block";
-
-    loadSubjects();
-
-  } catch (error) {
-
-    console.error(error);
-
-    loginMsg.textContent =
-      "Could not connect to server.";
-
-  }
-
-}
-
-
-/* =========================
-   UPLOAD BOOK
-========================= */
-
-async function uploadBook() {
-
-  const subjectName =
-    document.getElementById("name")
-      .value
-      .trim();
-
-  const file =
-    document.getElementById("book")
-      .files[0];
-
-  const uploadMsg =
-    document.getElementById("uploadMsg");
-
-
-  if (!subjectName) {
-
-    uploadMsg.className = "error";
-
-    uploadMsg.textContent =
-      "Please enter subject name.";
-
-    return;
-  }
-
-
-  if (!file) {
-
-    uploadMsg.className = "error";
-
-    uploadMsg.textContent =
-      "Please choose a PDF book.";
-
-    return;
-  }
-
-
-  if (
-    file.type !== "application/pdf" &&
-    !file.name.toLowerCase().endsWith(".pdf")
-  ) {
-
-    uploadMsg.className = "error";
-
-    uploadMsg.textContent =
-      "Please select a PDF file only.";
-
-    return;
-  }
-
-
-  const formData =
-    new FormData();
-
-
-  formData.append(
-    "subjectName",
-    subjectName
-  );
-
-
-  formData.append(
-    "book",
-    file
-  );
-
-
-  uploadMsg.className = "";
-
-  uploadMsg.textContent =
-    "Uploading and saving book...";
-
-
-  try {
-
-    const response = await fetch(
-      `${API_BASE}/api/admin/upload`,
-      {
-        method: "POST",
-
-        headers: {
-          "x-admin-token": token
-        },
-
-        body: formData
-      }
-    );
-
-
-    const data =
-      await response.json();
-
-
-    if (!response.ok) {
-
-      uploadMsg.className = "error";
-
-      uploadMsg.textContent =
-        data.error ||
-        "Book upload failed.";
-
-      return;
-    }
-
-
-    uploadMsg.className =
-      "success";
-
-    uploadMsg.textContent =
-      "Book uploaded and saved successfully!";
-
-
-    document.getElementById("name")
-      .value = "";
-
-    document.getElementById("book")
-      .value = "";
-
-
-    loadSubjects();
-
-
-  } catch (error) {
-
-    console.error(error);
-
-    uploadMsg.className = "error";
-
-    uploadMsg.textContent =
-      "Could not connect to server.";
-
-  }
-
-}
-
-
-/* =========================
-   LOAD SUBJECTS
-========================= */
-
-async function loadSubjects() {
-
-  const list =
-    document.getElementById("list");
-
-  try {
-
-    const response = await fetch(
-      `${API_BASE}/api/admin/subjects`,
-      {
-        method: "GET",
-
-        headers: {
-          "x-admin-token": token
-        }
-      }
-    );
-
-
-    const data =
-      await response.json();
-
-
-    if (!response.ok) {
-
-      list.textContent =
-        data.error ||
-        "Could not load subjects.";
-
-      return;
-    }
-
-
-    if (!data.length) {
-
-      list.textContent =
-        "No subjects saved yet.";
-
-      return;
-    }
-
-
-    list.innerHTML =
-      data.map(function(subject) {
-
-        return `
-          <div class="item">
-
-            <span>
-              <b>${subject.name}</b>
-
-              ${
-                subject.pages
-                  ? " — " +
-                    subject.pages +
-                    " pages"
-                  : ""
-              }
-            </span>
+        <div class="ad-box">
+
+          <h3>Left Advertisement</h3>
+
+          <div
+            id="leftAdPreview"
+            class="ad-preview"
+          >
+            No advertisement uploaded
+          </div>
+
+          <label for="leftAdImage">
+            Advertisement Image
+          </label>
+
+          <input
+            id="leftAdImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+          >
+
+          <div class="limit-note">
+            JPG, PNG, WEBP or GIF — Maximum 5 MB
+          </div>
+
+          <label for="leftAdUrl">
+            Target URL
+          </label>
+
+          <input
+            id="leftAdUrl"
+            type="text"
+            placeholder="https://example.com"
+          >
+
+          <div class="ad-actions">
 
             <button
-              class="delete"
-              onclick="deleteSubject('${subject.id}')"
+              onclick="saveAd('left')"
+            >
+              Save / Update
+            </button>
+
+            <button
+              class="delete-ad"
+              onclick="deleteAd('left')"
             >
               Delete
             </button>
 
           </div>
-        `;
 
-      }).join("");
+          <div
+            id="leftAdStatus"
+            class="status"
+          ></div>
+
+        </div>
 
 
-  } catch (error) {
+        <!-- RIGHT AD -->
 
-    console.error(error);
+        <div class="ad-box">
 
-    list.textContent =
-      "Could not connect to server.";
+          <h3>Right Advertisement</h3>
+
+          <div
+            id="rightAdPreview"
+            class="ad-preview"
+          >
+            No advertisement uploaded
+          </div>
+
+          <label for="rightAdImage">
+            Advertisement Image
+          </label>
+
+          <input
+            id="rightAdImage"
+            type="file"
+            accept="image/jpeg,image/png,image/webp,image/gif"
+          >
+
+          <div class="limit-note">
+            JPG, PNG, WEBP or GIF — Maximum 5 MB
+          </div>
+
+          <label for="rightAdUrl">
+            Target URL
+          </label>
+
+          <input
+            id="rightAdUrl"
+            type="text"
+            placeholder="https://example.com"
+          >
+
+          <div class="ad-actions">
+
+            <button
+              onclick="saveAd('right')"
+            >
+              Save / Update
+            </button>
+
+            <button
+              class="delete-ad"
+              onclick="deleteAd('right')"
+            >
+              Delete
+            </button>
+
+          </div>
+
+          <div
+            id="rightAdStatus"
+            class="status"
+          ></div>
+
+        </div>
+
+      </div>
+
+    </div>
+
+
+    <!-- =========================
+         SUBJECTS
+    ========================== -->
+
+    <div class="card">
+
+      <h2>Existing Courses</h2>
+
+      <button onclick="loadSubjects()">
+        Refresh Courses
+      </button>
+
+      <div
+        id="subjectsStatus"
+        class="status"
+      ></div>
+
+      <div id="subjectsList">
+        Loading...
+      </div>
+
+    </div>
+
+  </div>
+
+</div>
+
+
+<script>
+
+  /*
+  =========================================================
+  API CONFIG
+  =========================================================
+  */
+
+  const API_BASE =
+    window.location.hostname === "localhost" ||
+    window.location.hostname === "127.0.0.1"
+      ? "http://localhost:3000"
+      : "https://ai-teacher-backend-6htm.onrender.com";
+
+
+  /*
+  =========================================================
+  HELPERS
+  =========================================================
+  */
+
+  function showStatus(id, message, type) {
+
+    const box =
+      document.getElementById(id);
+
+    if (!box) return;
+
+    box.textContent = message;
+
+    box.className =
+      "status " + type;
+
+    box.style.display = "block";
 
   }
 
-}
 
+  function hideStatus(id) {
 
-/* =========================
-   DELETE SUBJECT
-========================= */
+    const box =
+      document.getElementById(id);
 
-async function deleteSubject(id) {
+    if (!box) return;
 
-  const confirmed =
-    confirm(
-      "Delete this subject and saved book?"
-    );
+    box.style.display = "none";
 
-
-  if (!confirmed) {
-    return;
   }
 
 
-  try {
+  function getToken() {
 
-    const response = await fetch(
-      `${API_BASE}/api/admin/subjects/${id}`,
-      {
-        method: "DELETE",
-
-        headers: {
-          "x-admin-token": token
-        }
-      }
+    return sessionStorage.getItem(
+      "ai_teacher_admin_token"
     );
 
-
-    const data =
-      await response.json();
+  }
 
 
-    if (!response.ok) {
+  /*
+  =========================================================
+  LOGIN
+  =========================================================
+  */
 
-      alert(
-        data.error ||
-        "Delete failed."
+  async function login() {
+
+    const password =
+      document
+        .getElementById("password")
+        .value
+        .trim();
+
+
+    if (!password) {
+
+      showStatus(
+        "loginStatus",
+        "Please enter the admin password.",
+        "error"
       );
 
       return;
+
     }
 
 
-    loadSubjects();
+    showStatus(
+      "loginStatus",
+      "Logging in...",
+      "info"
+    );
 
 
-  } catch (error) {
+    try {
 
-    console.error(error);
+      const response =
+        await fetch(
+          API_BASE + "/api/admin/login",
+          {
+            method: "POST",
 
-    alert(
-      "Could not connect to server."
+            headers: {
+              "Content-Type":
+                "application/json"
+            },
+
+            body: JSON.stringify({
+              password: password
+            })
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Login failed."
+        );
+
+      }
+
+
+      if (!data.token) {
+
+        throw new Error(
+          "Login succeeded but no admin token was returned."
+        );
+
+      }
+
+
+      sessionStorage.setItem(
+        "ai_teacher_admin_token",
+        data.token
+      );
+
+
+      document
+        .getElementById("loginCard")
+        .classList
+        .add("hidden");
+
+
+      document
+        .getElementById("adminPanel")
+        .classList
+        .remove("hidden");
+
+
+      showStatus(
+        "uploadStatus",
+        "Admin login successful.",
+        "success"
+      );
+
+
+      loadSubjects();
+
+      loadAds();
+
+    }
+    catch (error) {
+
+      showStatus(
+        "loginStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  UPLOAD BOOK
+  =========================================================
+  */
+
+  async function uploadBook() {
+
+    const subjectName =
+      document
+        .getElementById("name")
+        .value
+        .trim();
+
+
+    const fileInput =
+      document.getElementById("book");
+
+
+    const file =
+      fileInput.files[0];
+
+
+    if (!subjectName) {
+
+      showStatus(
+        "uploadStatus",
+        "Please enter the course name.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (!file) {
+
+      showStatus(
+        "uploadStatus",
+        "Please select a PDF file.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      file.type !== "application/pdf" &&
+      !file.name.toLowerCase().endsWith(".pdf")
+    ) {
+
+      showStatus(
+        "uploadStatus",
+        "Only PDF files are allowed.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      file.size >
+      100 * 1024 * 1024
+    ) {
+
+      showStatus(
+        "uploadStatus",
+        "File is larger than the 100 MB limit.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      showStatus(
+        "uploadStatus",
+        "Admin session expired. Please login again.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const formData =
+      new FormData();
+
+
+    formData.append(
+      "subjectName",
+      subjectName
+    );
+
+
+    /*
+    IMPORTANT:
+    Backend uses upload.single("book")
+    */
+
+    formData.append(
+      "book",
+      file,
+      file.name
+    );
+
+
+    showStatus(
+      "uploadStatus",
+      "Uploading PDF and processing textbook...\nPlease wait.",
+      "info"
+    );
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE + "/api/admin/upload",
+          {
+            method: "POST",
+
+            headers: {
+              "x-admin-token": token
+            },
+
+            body: formData
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Upload failed."
+        );
+
+      }
+
+
+      showStatus(
+        "uploadStatus",
+        "PDF uploaded successfully.\n\n" +
+        (
+          data.message ||
+          "Course processed successfully."
+        ),
+        "success"
+      );
+
+
+      document
+        .getElementById("name")
+        .value = "";
+
+
+      fileInput.value = "";
+
+
+      loadSubjects();
+
+    }
+    catch (error) {
+
+      showStatus(
+        "uploadStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  LOAD SUBJECTS
+  =========================================================
+  */
+
+  async function loadSubjects() {
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      return;
+
+    }
+
+
+    const list =
+      document.getElementById(
+        "subjectsList"
+      );
+
+
+    list.textContent =
+      "Loading courses...";
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE + "/api/admin/subjects",
+          {
+            method: "GET",
+
+            headers: {
+              "x-admin-token": token
+            }
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Unable to load courses."
+        );
+
+      }
+
+
+      const subjects =
+        Array.isArray(data)
+          ? data
+          : (
+              data.subjects ||
+              data.data ||
+              []
+            );
+
+
+      if (!subjects.length) {
+
+        list.innerHTML =
+          "<p>No courses uploaded yet.</p>";
+
+        return;
+
+      }
+
+
+      list.innerHTML = "";
+
+
+      subjects.forEach(
+        function(subject) {
+
+          const item =
+            document.createElement(
+              "div"
+            );
+
+
+          item.className =
+            "subject";
+
+
+          const left =
+            document.createElement(
+              "div"
+            );
+
+
+          const name =
+            document.createElement(
+              "div"
+            );
+
+
+          name.className =
+            "subject-name";
+
+
+          name.textContent =
+            subject.name ||
+            subject.subjectName ||
+            subject.title ||
+            "Unnamed Course";
+
+
+          left.appendChild(name);
+
+
+          if (subject.id) {
+
+            const id =
+              document.createElement(
+                "div"
+              );
+
+
+            id.className =
+              "subject-id";
+
+
+            id.textContent =
+              "ID: " + subject.id;
+
+
+            left.appendChild(id);
+
+          }
+
+
+          const deleteButton =
+            document.createElement(
+              "button"
+            );
+
+
+          deleteButton.className =
+            "danger";
+
+
+          deleteButton.textContent =
+            "Delete";
+
+
+          deleteButton.onclick =
+            function() {
+
+              deleteSubject(
+                subject.id
+              );
+
+            };
+
+
+          item.appendChild(left);
+
+          item.appendChild(
+            deleteButton
+          );
+
+
+          list.appendChild(item);
+
+        }
+      );
+
+    }
+    catch (error) {
+
+      list.textContent =
+        error.message;
+
+
+      showStatus(
+        "subjectsStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  DELETE SUBJECT
+  =========================================================
+  */
+
+  async function deleteSubject(
+    subjectId
+  ) {
+
+    if (!subjectId) {
+
+      showStatus(
+        "subjectsStatus",
+        "Course ID is missing.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const confirmed =
+      confirm(
+        "Are you sure you want to delete this course?"
+      );
+
+
+    if (!confirmed) {
+
+      return;
+
+    }
+
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      showStatus(
+        "subjectsStatus",
+        "Admin session expired. Please login again.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE +
+          "/api/admin/subjects/" +
+          encodeURIComponent(
+            subjectId
+          ),
+          {
+            method: "DELETE",
+
+            headers: {
+              "x-admin-token": token
+            }
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Delete failed."
+        );
+
+      }
+
+
+      showStatus(
+        "subjectsStatus",
+        "Course deleted successfully.",
+        "success"
+      );
+
+
+      loadSubjects();
+
+    }
+    catch (error) {
+
+      showStatus(
+        "subjectsStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  LOAD ADS
+  =========================================================
+  */
+
+  async function loadAds() {
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      return;
+
+    }
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE + "/api/admin/ads",
+          {
+            method: "GET",
+
+            headers: {
+              "x-admin-token": token
+            }
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Unable to load advertisements."
+        );
+
+      }
+
+
+      const ads =
+        Array.isArray(data)
+          ? data
+          : (
+              data.ads ||
+              data.data ||
+              []
+            );
+
+
+      renderAd(
+        ads,
+        "left"
+      );
+
+
+      renderAd(
+        ads,
+        "right"
+      );
+
+    }
+    catch (error) {
+
+      showStatus(
+        "leftAdStatus",
+        error.message,
+        "error"
+      );
+
+      showStatus(
+        "rightAdStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  RENDER AD
+  =========================================================
+  */
+
+  function renderAd(
+    ads,
+    position
+  ) {
+
+    const ad =
+      ads.find(
+        function(item) {
+
+          return item.position === position;
+
+        }
+      );
+
+
+    const preview =
+      document.getElementById(
+        position + "AdPreview"
+      );
+
+
+    const urlInput =
+      document.getElementById(
+        position + "AdUrl"
+      );
+
+
+    preview.innerHTML = "";
+
+
+    if (!ad || !ad.image_url) {
+
+      preview.textContent =
+        "No advertisement uploaded";
+
+      urlInput.value =
+        ad && ad.target_url
+          ? ad.target_url
+          : "";
+
+      return;
+
+    }
+
+
+    const img =
+      document.createElement(
+        "img"
+      );
+
+
+    img.src =
+      ad.image_url;
+
+
+    img.alt =
+      position + " advertisement";
+
+
+    preview.appendChild(img);
+
+
+    urlInput.value =
+      ad.target_url ||
+      "";
+
+  }
+
+
+  /*
+  =========================================================
+  SAVE / UPDATE AD
+  =========================================================
+  */
+
+  async function saveAd(
+    position
+  ) {
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      showStatus(
+        position + "AdStatus",
+        "Admin session expired. Please login again.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const fileInput =
+      document.getElementById(
+        position + "AdImage"
+      );
+
+
+    const urlInput =
+      document.getElementById(
+        position + "AdUrl"
+      );
+
+
+    const file =
+      fileInput.files[0];
+
+
+    const targetUrl =
+      urlInput.value.trim();
+
+
+    if (!file) {
+
+      showStatus(
+        position + "AdStatus",
+        "Please select an advertisement image.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    if (
+      file.size >
+      5 * 1024 * 1024
+    ) {
+
+      showStatus(
+        position + "AdStatus",
+        "Image is larger than the 5 MB limit.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const allowedTypes = [
+      "image/jpeg",
+      "image/png",
+      "image/webp",
+      "image/gif"
+    ];
+
+
+    if (
+      !allowedTypes.includes(
+        file.type
+      )
+    ) {
+
+      showStatus(
+        position + "AdStatus",
+        "Only JPG, PNG, WEBP and GIF images are allowed.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    const formData =
+      new FormData();
+
+
+    formData.append(
+      "position",
+      position
+    );
+
+
+    formData.append(
+      "targetUrl",
+      targetUrl
+    );
+
+
+    formData.append(
+      "image",
+      file,
+      file.name
+    );
+
+
+    showStatus(
+      position + "AdStatus",
+      "Uploading advertisement...",
+      "info"
+    );
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE + "/api/admin/ads",
+          {
+            method: "POST",
+
+            headers: {
+              "x-admin-token": token
+            },
+
+            body: formData
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Advertisement upload failed."
+        );
+
+      }
+
+
+      showStatus(
+        position + "AdStatus",
+        data.message ||
+        "Advertisement saved successfully.",
+        "success"
+      );
+
+
+      fileInput.value = "";
+
+
+      loadAds();
+
+    }
+    catch (error) {
+
+      showStatus(
+        position + "AdStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  DELETE AD
+  =========================================================
+  */
+
+  async function deleteAd(
+    position
+  ) {
+
+    const confirmed =
+      confirm(
+        "Are you sure you want to delete the " +
+        position +
+        " advertisement?"
+      );
+
+
+    if (!confirmed) {
+
+      return;
+
+    }
+
+
+    const token =
+      getToken();
+
+
+    if (!token) {
+
+      showStatus(
+        position + "AdStatus",
+        "Admin session expired. Please login again.",
+        "error"
+      );
+
+      return;
+
+    }
+
+
+    showStatus(
+      position + "AdStatus",
+      "Deleting advertisement...",
+      "info"
+    );
+
+
+    try {
+
+      const response =
+        await fetch(
+          API_BASE +
+          "/api/admin/ads/" +
+          position,
+          {
+            method: "DELETE",
+
+            headers: {
+              "x-admin-token": token
+            }
+          }
+        );
+
+
+      const data =
+        await response.json();
+
+
+      if (!response.ok) {
+
+        throw new Error(
+          data.error ||
+          "Advertisement delete failed."
+        );
+
+      }
+
+
+      showStatus(
+        position + "AdStatus",
+        data.message ||
+        "Advertisement deleted successfully.",
+        "success"
+      );
+
+
+      document
+        .getElementById(
+          position + "AdImage"
+        )
+        .value = "";
+
+
+      document
+        .getElementById(
+          position + "AdUrl"
+        )
+        .value = "";
+
+
+      loadAds();
+
+    }
+    catch (error) {
+
+      showStatus(
+        position + "AdStatus",
+        error.message,
+        "error"
+      );
+
+    }
+
+  }
+
+
+  /*
+  =========================================================
+  LOGOUT
+  =========================================================
+  */
+
+  function logout() {
+
+    sessionStorage.removeItem(
+      "ai_teacher_admin_token"
+    );
+
+
+    document
+      .getElementById("adminPanel")
+      .classList
+      .add("hidden");
+
+
+    document
+      .getElementById("loginCard")
+      .classList
+      .remove("hidden");
+
+
+    document
+      .getElementById("password")
+      .value = "";
+
+
+    hideStatus(
+      "loginStatus"
+    );
+
+
+    hideStatus(
+      "uploadStatus"
+    );
+
+
+    hideStatus(
+      "subjectsStatus"
+    );
+
+
+    hideStatus(
+      "leftAdStatus"
+    );
+
+
+    hideStatus(
+      "rightAdStatus"
     );
 
   }
 
-}
+
+  /*
+  =========================================================
+  AUTO CHECK
+  =========================================================
+  */
+
+  window.addEventListener(
+    "load",
+    function() {
+
+      const token =
+        getToken();
+
+
+      if (token) {
+
+        document
+          .getElementById("loginCard")
+          .classList
+          .add("hidden");
+
+
+        document
+          .getElementById("adminPanel")
+          .classList
+          .remove("hidden");
+
+
+        loadSubjects();
+
+        loadAds();
+
+      }
+
+    }
+  );
 
 </script>
 
 </body>
-
 </html>
-```

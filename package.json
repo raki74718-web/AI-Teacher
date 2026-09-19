@@ -4,7 +4,9 @@
   "description": "B.Tech subject book based AI Teacher",
   "main": "server.js",
   "scripts": {
-    "start": "node server.js"
+    "start": "node server.js",
+    "deploy": "wrangler deploy",
+    "preview": "wrangler dev"
   },
   "dependencies": {
     "@google/generative-ai": "^0.24.1",
@@ -18,5 +20,8 @@
     "pdfjs-dist": "^4.10.38",
     "serverless-http": "^4.0.0",
     "tesseract.js": "^7.0.0"
+  },
+  "devDependencies": {
+    "wrangler": "^4.135.0"
   }
 }

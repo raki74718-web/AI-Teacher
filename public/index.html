@@ -105,12 +105,14 @@
 
     .ad {
       border-radius: 18px;
-      padding: 25px 18px;
+      padding: 12px;
       color: white;
       min-height: 270px;
       position: sticky;
       top: 20px;
       box-shadow: 0 8px 25px rgba(0,0,0,0.08);
+      overflow: hidden;
+      background: #eef2ee;
     }
 
     .ad-left {
@@ -124,13 +126,13 @@
     .ad h3 {
       font-size: 21px;
       line-height: 1.3;
-      margin-bottom: 15px;
+      margin: 10px 6px 15px;
     }
 
     .ad p {
       font-size: 14px;
       line-height: 1.5;
-      margin-bottom: 20px;
+      margin: 0 6px 20px;
     }
 
     .ad button {
@@ -141,6 +143,41 @@
       border-radius: 8px;
       font-weight: bold;
       cursor: pointer;
+    }
+
+    /*
+     * DYNAMIC AD IMAGE
+     */
+
+    .dynamic-ad-link {
+      display: block;
+      width: 100%;
+      text-decoration: none;
+      color: inherit;
+    }
+
+    .dynamic-ad-image {
+      display: block;
+      width: 100%;
+      max-width: 100%;
+      height: auto;
+      max-height: 500px;
+      object-fit: contain;
+      border-radius: 12px;
+    }
+
+    .ad-placeholder {
+      padding: 20px 10px;
+    }
+
+    .ad-placeholder h3 {
+      margin-left: 0;
+      margin-right: 0;
+    }
+
+    .ad-placeholder p {
+      margin-left: 0;
+      margin-right: 0;
     }
 
     .teacher-card {
@@ -375,23 +412,34 @@
 
   <main class="main-container">
 
-    <aside class="ad ad-left">
+    <!-- LEFT AD -->
 
-      <h3>
-        🎓 Master AI & Data Structures
-      </h3>
+    <aside
+      id="leftAd"
+      class="ad ad-left"
+    >
 
-      <p>
-        Learn technical subjects with
-        your personal AI Teacher.
-      </p>
+      <div class="ad-placeholder">
 
-      <button>
-        START LEARNING →
-      </button>
+        <h3>
+          🎓 Master AI & Data Structures
+        </h3>
+
+        <p>
+          Learn technical subjects with
+          your personal AI Teacher.
+        </p>
+
+        <button>
+          START LEARNING →
+        </button>
+
+      </div>
 
     </aside>
 
+
+    <!-- AI TEACHER -->
 
     <section class="teacher-card">
 
@@ -489,20 +537,29 @@
     </section>
 
 
-    <aside class="ad ad-right">
+    <!-- RIGHT AD -->
 
-      <h3>
-        💻 Build Your Tech Future
-      </h3>
+    <aside
+      id="rightAd"
+      class="ad ad-right"
+    >
 
-      <p>
-        Improve your programming,
-        data structures and technology skills.
-      </p>
+      <div class="ad-placeholder">
 
-      <button>
-        EXPLORE COURSES →
-      </button>
+        <h3>
+          💻 Build Your Tech Future
+        </h3>
+
+        <p>
+          Improve your programming,
+          data structures and technology skills.
+        </p>
+
+        <button>
+          EXPLORE COURSES →
+        </button>
+
+      </div>
 
     </aside>
 
@@ -520,23 +577,19 @@
      * ==========================================
      * API CONFIGURATION
      * ==========================================
-     *
-     * Local:
-     * http://localhost:3000
-     *
-     * Public:
-     * Render backend
      */
 
     const API_BASE =
       window.location.hostname === 'localhost' ||
       window.location.hostname === '127.0.0.1'
-        ? 'http://localhost:10000'
+        ? 'http://localhost:3000'
         : 'https://ai-teacher-backend-6htm.onrender.com';
 
 
     /*
+     * ==========================================
      * ELEMENTS
+     * ==========================================
      */
 
     const subject =
@@ -554,12 +607,251 @@
     const status =
       document.getElementById('status');
 
+    const leftAd =
+      document.getElementById('leftAd');
+
+    const rightAd =
+      document.getElementById('rightAd');
+
 
     let selectedSubject = '';
 
 
     /*
+     * ==========================================
+     * LOAD ADVERTISEMENTS
+     * ==========================================
+     *
+     * Public endpoint:
+     * GET /api/ads
+     *
+     * No admin token is required.
+     */
+
+    async function loadAdvertisements() {
+
+      try {
+
+        const response =
+          await fetch(
+            API_BASE + '/api/ads'
+          );
+
+
+        if (!response.ok) {
+
+          throw new Error(
+            'Could not load advertisements'
+          );
+
+        }
+
+
+        const ads =
+          await response.json();
+
+
+        console.log(
+          'Advertisements:',
+          ads
+        );
+
+
+        if (
+          !Array.isArray(ads)
+        ) {
+
+          return;
+
+        }
+
+
+        const left =
+          ads.find(
+            function (ad) {
+
+              return (
+                ad.position === 'left' &&
+                ad.active !== false &&
+                ad.image_url
+              );
+
+            }
+          );
+
+
+        const right =
+          ads.find(
+            function (ad) {
+
+              return (
+                ad.position === 'right' &&
+                ad.active !== false &&
+                ad.image_url
+              );
+
+            }
+          );
+
+
+        renderAdvertisement(
+          leftAd,
+          left,
+          'left'
+        );
+
+
+        renderAdvertisement(
+          rightAd,
+          right,
+          'right'
+        );
+
+
+      }
+
+      catch (error) {
+
+        console.error(
+          'ADVERTISEMENT ERROR:',
+          error
+        );
+
+        /*
+         * If ads fail, keep the original
+         * placeholder advertisements.
+         */
+
+      }
+
+    }
+
+
+    /*
+     * ==========================================
+     * RENDER ONE ADVERTISEMENT
+     * ==========================================
+     */
+
+    function renderAdvertisement(
+      container,
+      ad,
+      position
+    ) {
+
+      if (
+        !container
+      ) {
+
+        return;
+
+      }
+
+
+      if (
+        !ad ||
+        !ad.image_url
+      ) {
+
+        return;
+
+      }
+
+
+      container.innerHTML = '';
+
+
+      const image =
+        document.createElement('img');
+
+
+      image.className =
+        'dynamic-ad-image';
+
+
+      image.src =
+        ad.image_url;
+
+
+      image.alt =
+        position === 'left'
+          ? 'Advertisement'
+          : 'Advertisement';
+
+
+      image.loading =
+        'lazy';
+
+
+      image.onerror =
+        function () {
+
+          console.error(
+            'Ad image failed:',
+            ad.image_url
+          );
+
+          container.innerHTML = '';
+
+        };
+
+
+      /*
+       * If admin entered a target URL,
+       * clicking the advertisement opens it.
+       */
+
+      if (
+        ad.target_url &&
+        String(ad.target_url).trim()
+      ) {
+
+        const link =
+          document.createElement('a');
+
+
+        link.className =
+          'dynamic-ad-link';
+
+
+        link.href =
+          ad.target_url;
+
+
+        link.target =
+          '_blank';
+
+
+        link.rel =
+          'noopener noreferrer';
+
+
+        link.appendChild(
+          image
+        );
+
+
+        container.appendChild(
+          link
+        );
+
+      }
+
+      else {
+
+        container.appendChild(
+          image
+        );
+
+      }
+
+    }
+
+
+    /*
+     * ==========================================
      * LOAD SUBJECTS
+     * ==========================================
      */
 
     async function loadSubjects() {
@@ -665,7 +957,9 @@
 
 
     /*
+     * ==========================================
      * SUBJECT CHANGE
+     * ==========================================
      */
 
     subject.addEventListener(
@@ -680,7 +974,9 @@
 
 
     /*
+     * ==========================================
      * SOURCE NAME
+     * ==========================================
      */
 
     function getSourceName(source) {
@@ -716,7 +1012,9 @@
 
 
     /*
+     * ==========================================
      * SOURCE PAGES
+     * ==========================================
      */
 
     function getSourcePages(data) {
@@ -866,7 +1164,9 @@
 
 
     /*
+     * ==========================================
      * DISPLAY SOURCE
+     * ==========================================
      */
 
     function displaySourceInfo(data) {
@@ -935,7 +1235,9 @@
 
 
     /*
+     * ==========================================
      * ASK AI
+     * ==========================================
      */
 
     ask.addEventListener(
@@ -1101,7 +1403,9 @@
 
 
     /*
+     * ==========================================
      * CTRL + ENTER
+     * ==========================================
      */
 
     question.addEventListener(
@@ -1122,12 +1426,16 @@
 
 
     /*
+     * ==========================================
      * START
+     * ==========================================
      */
 
     loadSubjects();
 
+    loadAdvertisements();
+
   </script>
 
 </body>
-</html>s
+</html>
