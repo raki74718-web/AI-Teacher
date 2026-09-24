@@ -558,7 +558,6 @@ function detectQuestionType(
 /* =========================================================
    SEARCH CHUNKS
 ========================================================= */
-
 function searchChunks(
   question,
   chunks
@@ -1170,61 +1169,117 @@ function searchChunks(
         );
   }
 
-  /* Add nearby chunks */
+  /* Add nearby chunks without changing relevance order */
 
-  const finalIndexes =
+  const resultItems = [];
+
+  const addedIndexes =
     new Set();
 
   for (
     const item
     of selected
   ) {
-    finalIndexes.add(
-      item.index
-    );
+    if (
+      !addedIndexes.has(
+        item.index
+      )
+    ) {
+      resultItems.push(
+        item
+      );
+
+      addedIndexes.add(
+        item.index
+      );
+    }
 
     if (
       item.index > 0 &&
-      finalIndexes.size <
+      resultItems.length <
         TOP_K_CHUNKS + 2
     ) {
-      finalIndexes.add(
-        item.index - 1
-      );
+      const previousIndex =
+        item.index - 1;
+
+      if (
+        !addedIndexes.has(
+          previousIndex
+        )
+      ) {
+        resultItems.push({
+          chunk:
+            chunks[
+              previousIndex
+            ],
+          index:
+            previousIndex,
+          score:
+            0
+        });
+
+        addedIndexes.add(
+          previousIndex
+        );
+      }
     }
 
     if (
       item.index <
         chunks.length - 1 &&
-      finalIndexes.size <
+      resultItems.length <
         TOP_K_CHUNKS + 2
     ) {
-      finalIndexes.add(
-        item.index + 1
-      );
+      const nextIndex =
+        item.index + 1;
+
+      if (
+        !addedIndexes.has(
+          nextIndex
+        )
+      ) {
+        resultItems.push({
+          chunk:
+            chunks[
+              nextIndex
+            ],
+          index:
+            nextIndex,
+          score:
+            0
+        });
+
+        addedIndexes.add(
+          nextIndex
+        );
+      }
     }
   }
 
   const results =
-    Array.from(
-      finalIndexes
-    )
-      .sort(
-        (a, b) =>
-          a - b
-      )
-      .map(
-        index =>
-          chunks[index]
-      )
+    resultItems
       .slice(
         0,
         TOP_K_CHUNKS + 2
+      )
+      .map(
+        item =>
+          item.chunk
       );
 
   console.log(
     "Relevant chunks:",
     results.length
+  );
+
+  console.log(
+    "Relevant source pages:",
+    results
+      .map(
+        chunk =>
+          chunk.page
+      )
+      .filter(Boolean)
   );
 
   if (
@@ -1236,7 +1291,7 @@ function searchChunks(
         .slice(0, 5)
         .map(
           item =>
-            `${item.index}(score:${item.score})`
+            `${item.index}(page:${item.chunk.page}, score:${item.score})`
         )
         .join(", ")
     );
