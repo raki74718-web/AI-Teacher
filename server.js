@@ -2922,27 +2922,24 @@ If any answer is NO, rewrite the response before returning it.
          SOURCE PAGES
       ===================================================== */
 
-     if (
-  answer !==
-  exactFallback &&
+   if (
+  answer !== exactFallback &&
   relevantChunks.length > 0
 ) {
-  const sourcePage =
-    Number(
-      relevantChunks[0].page
-    );
+  const sourcePage = Number(
+    relevantChunks
+      .map(chunk => Number(chunk.page))
+      .filter(page => Number.isFinite(page) && page > 0)
+      .sort((a, b) => a - b)[0]
+  );
 
   if (
-    Number.isFinite(
-      sourcePage
-    ) &&
+    Number.isFinite(sourcePage) &&
     sourcePage > 0
   ) {
-    answer +=
-      `\n\nSource: Page ${sourcePage}`;
+    answer += `\n\nSource: Page ${sourcePage}`;
   }
 }
-         
 
       console.log(
         "Source pages:",
