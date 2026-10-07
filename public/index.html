@@ -1,4 +1,4 @@
-
+```html
 <!DOCTYPE html>
 <html lang="en">
 <head>
@@ -571,7 +571,7 @@
         rgba(79, 70, 229, 0.10);
     }
 
-    /* SINGLE EMAIL HELP BLOCK */
+    /* EMAIL HELP */
 
     .subject-help {
       margin-top: 13px;
@@ -1318,7 +1318,7 @@
         </select>
 
 
-        <!-- ONLY EMAIL BLOCK -->
+        <!-- EMAIL HELP -->
 
         <div class="subject-help">
 
@@ -1548,6 +1548,24 @@
 
   <script>
 
+    /*
+      ============================================================
+      AI TEACHER FRONTEND
+      ============================================================
+
+      Academic subjects:
+        - Continue normal textbook/RAG behaviour.
+
+      Spoken English:
+        - Conversation history is maintained in the browser.
+        - History is sent to /api/ask.
+        - Backend can use that history for one-by-one practice.
+
+      IMPORTANT:
+        This file does NOT change the academic RAG rules.
+    */
+
+
     const API_BASE =
       window.location.hostname === "localhost" ||
       window.location.hostname === "127.0.0.1"
@@ -1586,6 +1604,41 @@
       document.getElementById("rightAd");
 
 
+    /*
+      ============================================================
+      CONVERSATION HISTORY
+      ============================================================
+
+      Example:
+
+      Student:
+      I want to practice introducing myself.
+
+      AI:
+      What is your name?
+
+      Student:
+      My name is Krishna.
+
+      AI:
+      Good! "My name is Krishna." is correct.
+      Where are you from?
+
+      The history is sent to the backend on every request.
+    */
+
+    let chatHistory = [];
+
+
+    /*
+      Maximum number of stored messages.
+
+      20 messages = approximately 10 conversation turns.
+    */
+
+    const MAX_HISTORY_MESSAGES = 20;
+
+
     function setStatus(
       message,
       type = ""
@@ -1599,6 +1652,12 @@
 
     }
 
+
+    /*
+      ============================================================
+      SUBJECT LOADING
+      ============================================================
+    */
 
     async function loadSubjects() {
 
@@ -1678,6 +1737,24 @@
               );
 
 
+            /*
+              Support both:
+
+              [
+                "Java",
+                "Chemistry"
+              ]
+
+              and:
+
+              [
+                {
+                  id: "...",
+                  name: "Java"
+                }
+              ]
+            */
+
             if (
               typeof subject === "string"
             ) {
@@ -1705,11 +1782,6 @@
                 id ||
                 `Subject ${index + 1}`;
 
-
-              /*
-                Keep ID in value.
-                Keep readable name in text.
-              */
 
               option.value =
                 String(id).trim();
@@ -1758,9 +1830,32 @@
     }
 
 
+    /*
+      ============================================================
+      SUBJECT CHANGE
+      ============================================================
+
+      If student moves from Spoken English to Java,
+      or Java to Chemistry, old conversation must not
+      be sent to the new subject.
+    */
+
     subjectSelect.addEventListener(
       "change",
       function () {
+
+        /*
+          IMPORTANT:
+          Reset conversation whenever subject changes.
+        */
+
+        chatHistory = [];
+
+
+        console.log(
+          "CONVERSATION HISTORY CLEARED"
+        );
+
 
         const option =
           subjectSelect.options[
@@ -1792,25 +1887,74 @@
         );
 
 
-        if (!value) {
+        /*
+          Reset old result when subject changes.
+        */
+
+        answerCard.classList.add(
+          "hidden"
+        );
+
+        sourceCard.classList.add(
+          "hidden"
+        );
+
+        answerBox.textContent =
+          "";
+
+        sourceBox.textContent =
+          "";
+
+
+        /*
+          Change placeholder for Spoken English.
+        */
+
+        if (
+          /spoken english|english speaking|spoken english teacher|english teacher|english communication/i.test(
+            text
+          )
+        ) {
+
+          questionInput.placeholder =
+            "Ask for English practice, correction, or conversation...";
 
           setStatus(
-            "Please select a subject."
+            "Spoken English selected. Start your practice.",
+            "success"
           );
 
-          return;
+        } else {
+
+          questionInput.placeholder =
+            "Ask a question from your textbook...";
+
+          if (!value) {
+
+            setStatus(
+              "Please select a subject."
+            );
+
+          } else {
+
+            setStatus(
+              `Selected: ${text}`,
+              "success"
+            );
+
+          }
 
         }
-
-
-        setStatus(
-          `Selected: ${text}`,
-          "success"
-        );
 
       }
     );
 
+
+    /*
+      ============================================================
+      ADS
+      ============================================================
+    */
 
     async function loadAds() {
 
@@ -1893,7 +2037,9 @@
     ) {
 
       if (!container) {
+
         return;
+
       }
 
 
@@ -2007,6 +2153,12 @@
     }
 
 
+    /*
+      ============================================================
+      SOURCE HELPERS
+      ============================================================
+    */
+
     function getSourceName(
       data
     ) {
@@ -2037,10 +2189,37 @@
     }
 
 
+    /*
+      ============================================================
+      SPOKEN ENGLISH DETECTION
+      ============================================================
+
+      This is only used by frontend UI.
+
+      Backend should also independently identify the subject.
+    */
+
+    function isSpokenEnglishSubject(
+      subjectName
+    ) {
+
+      return /spoken english|english speaking|spoken english teacher|english teacher|english communication/i.test(
+        subjectName || ""
+      );
+
+    }
+
+
+    /*
+      ============================================================
+      ASK TEACHER
+      ============================================================
+    */
+
     async function askTeacher() {
 
       /*
-        Read the selected option directly.
+        Read selected option directly.
       */
 
       const selectedOption =
@@ -2077,23 +2256,49 @@
         questionInput.value.trim();
 
 
+      const spokenEnglish =
+        isSpokenEnglishSubject(
+          subjectName
+        );
+
+
+      console.log(
+        "================================"
+      );
+
       console.log(
         "FINAL SUBJECT ID:",
         subjectId
       );
-
 
       console.log(
         "FINAL SUBJECT NAME:",
         subjectName
       );
 
-
       console.log(
         "FINAL QUESTION:",
         question
       );
 
+      console.log(
+        "SPOKEN ENGLISH:",
+        spokenEnglish
+      );
+
+      console.log(
+        "CURRENT HISTORY:",
+        chatHistory
+      );
+
+      console.log(
+        "================================"
+      );
+
+
+      /*
+        Validate subject.
+      */
 
       if (
         !subjectId ||
@@ -2113,6 +2318,10 @@
       }
 
 
+      /*
+        Validate question.
+      */
+
       if (!question) {
 
         setStatus(
@@ -2127,6 +2336,10 @@
       }
 
 
+      /*
+        Disable button while waiting.
+      */
+
       askButton.disabled =
         true;
 
@@ -2138,15 +2351,32 @@
         `;
 
 
-      setStatus(
-        "AI Teacher is searching your study material..."
-      );
+      /*
+        Different status for Spoken English.
+      */
 
+      if (spokenEnglish) {
+
+        setStatus(
+          "AI English Teacher is thinking..."
+        );
+
+      } else {
+
+        setStatus(
+          "AI Teacher is searching your study material..."
+        );
+
+      }
+
+
+      /*
+        Hide previous result while new request runs.
+      */
 
       answerCard.classList.add(
         "hidden"
       );
-
 
       sourceCard.classList.add(
         "hidden"
@@ -2156,7 +2386,6 @@
       answerBox.textContent =
         "";
 
-
       sourceBox.textContent =
         "";
 
@@ -2164,7 +2393,33 @@
       try {
 
         /*
-          Send subject name AND ID.
+          ========================================================
+          IMPORTANT REQUEST BODY
+          ========================================================
+
+          The new "history" property is the main addition.
+
+          Example after first turn:
+
+          {
+            subject: "Spoken English",
+            subjectId: "...",
+            question: "my name is krishna",
+            history: [
+              {
+                role: "user",
+                text: "I want to practice introducing myself..."
+              },
+              {
+                role: "assistant",
+                text: "What is your name?"
+              }
+            ]
+          }
+
+          Academic subjects will also receive history,
+          but the backend should continue normal RAG behaviour
+          for those subjects.
         */
 
         const requestBody = {
@@ -2176,7 +2431,10 @@
             subjectId,
 
           question:
-            question
+            question,
+
+          history:
+            chatHistory
 
         };
 
@@ -2227,6 +2485,10 @@
         );
 
 
+        /*
+          Handle HTTP errors.
+        */
+
         if (!response.ok) {
 
           throw new Error(
@@ -2238,12 +2500,77 @@
         }
 
 
+        /*
+          Get answer from supported response fields.
+        */
+
         const answer =
           data.answer ||
           data.response ||
           data.text ||
           "No answer was returned.";
 
+
+        /*
+          ========================================================
+          SAVE CONVERSATION TURN
+          ========================================================
+
+          Save BOTH student and AI response.
+
+          This is especially important for Spoken English.
+        */
+
+        chatHistory.push({
+
+          role:
+            "user",
+
+          text:
+            question
+
+        });
+
+
+        chatHistory.push({
+
+          role:
+            "assistant",
+
+          text:
+            answer
+
+        });
+
+
+        /*
+          Keep only latest 20 messages.
+
+          This prevents unnecessarily large requests.
+        */
+
+        if (
+          chatHistory.length >
+          MAX_HISTORY_MESSAGES
+        ) {
+
+          chatHistory =
+            chatHistory.slice(
+              -MAX_HISTORY_MESSAGES
+            );
+
+        }
+
+
+        console.log(
+          "UPDATED HISTORY:",
+          chatHistory
+        );
+
+
+        /*
+          Display answer.
+        */
 
         answerBox.textContent =
           answer;
@@ -2254,6 +2581,17 @@
         );
 
 
+        /*
+          ========================================================
+          SOURCE DISPLAY
+          ========================================================
+
+          Academic RAG responses can show source/page.
+
+          Spoken English conversation responses may not have
+          a source page, so source card is hidden in that case.
+        */
+
         let sourceText =
           "";
 
@@ -2261,7 +2599,8 @@
         if (
           Array.isArray(
             data.sources
-          )
+          ) &&
+          data.sources.length > 0
         ) {
 
           sourceText =
@@ -2280,6 +2619,7 @@
                   const page =
                     item.page ||
                     item.pageNumber ||
+                    item.sourcePage ||
                     "";
 
 
@@ -2305,21 +2645,47 @@
             );
 
 
-          sourceText =
-            sourceName;
+          /*
+            Only create a source when backend actually
+            returned source/page information.
+          */
+
+          if (
+            data.source ||
+            data.fileName ||
+            data.filename ||
+            data.document ||
+            data.book ||
+            data.page ||
+            data.pageNumber ||
+            data.sourcePage
+          ) {
+
+            sourceText =
+              sourceName;
 
 
-          if (sourcePage) {
+            if (sourcePage) {
 
-            sourceText +=
-              ` • Page ${sourcePage}`;
+              sourceText +=
+                ` • Page ${sourcePage}`;
+
+            }
 
           }
 
         }
 
 
-        if (sourceText) {
+        /*
+          Show source only when there is actual source data.
+        */
+
+        if (
+          sourceText &&
+          sourceText !==
+            "Study material"
+        ) {
 
           sourceBox.textContent =
             sourceText;
@@ -2328,13 +2694,78 @@
             "hidden"
           );
 
+        } else {
+
+          sourceBox.textContent =
+            "";
+
+          sourceCard.classList.add(
+            "hidden"
+          );
+
         }
 
 
-        setStatus(
-          "Answer generated from your study material.",
-          "success"
-        );
+        /*
+          ========================================================
+          STATUS
+          ========================================================
+        */
+
+        if (
+          Array.isArray(data.sources) &&
+          data.sources.length > 0
+        ) {
+
+          setStatus(
+            "Answer generated from your study material.",
+            "success"
+          );
+
+        } else if (
+          data.source ||
+          data.page ||
+          data.sourcePage ||
+          data.pageNumber
+        ) {
+
+          setStatus(
+            "Answer generated from your study material.",
+            "success"
+          );
+
+        } else if (
+          spokenEnglish
+        ) {
+
+          setStatus(
+            "English practice response generated.",
+            "success"
+          );
+
+        } else {
+
+          setStatus(
+            "AI Teacher responded.",
+            "success"
+          );
+
+        }
+
+
+        /*
+          Clear input after successful request.
+        */
+
+        questionInput.value =
+          "";
+
+
+        /*
+          Keep focus in textarea for conversation practice.
+        */
+
+        questionInput.focus();
 
 
       } catch (error) {
@@ -2367,6 +2798,10 @@
 
       } finally {
 
+        /*
+          Always re-enable button.
+        */
+
         askButton.disabled =
           false;
 
@@ -2379,11 +2814,23 @@
     }
 
 
+    /*
+      ============================================================
+      BUTTON
+      ============================================================
+    */
+
     askButton.addEventListener(
       "click",
       askTeacher
     );
 
+
+    /*
+      ============================================================
+      CTRL + ENTER
+      ============================================================
+    */
 
     questionInput.addEventListener(
       "keydown",
@@ -2403,6 +2850,12 @@
       }
     );
 
+
+    /*
+      ============================================================
+      INITIAL LOAD
+      ============================================================
+    */
 
     loadSubjects();
 

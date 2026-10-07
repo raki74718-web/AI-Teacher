@@ -470,6 +470,136 @@ function normalizeQuestion(
 }
 
 /* =========================================================
+   SPOKEN ENGLISH SUBJECT DETECTION
+========================================================= */
+
+function isSpokenEnglishSubject(
+  subjectName
+) {
+  return /spoken english|english speaking|spoken english teacher|english teacher|english communication/i.test(
+    String(subjectName || "")
+  );
+}
+
+/* =========================================================
+   SAFE CHAT HISTORY
+========================================================= */
+
+function sanitizeHistory(
+  history
+) {
+  if (
+    !Array.isArray(history)
+  ) {
+    return [];
+  }
+
+  return history
+    .filter(
+      item =>
+        item &&
+        (
+          item.role === "user" ||
+          item.role === "assistant"
+        ) &&
+        typeof item.text === "string" &&
+        item.text.trim()
+    )
+    .slice(-20)
+    .map(
+      item => ({
+        role:
+          item.role,
+        text:
+          item.text.trim().slice(
+            0,
+            5000
+          )
+      })
+    );
+}
+
+/* =========================================================
+   CHECK ACTIVE ENGLISH PRACTICE
+========================================================= */
+
+function isEnglishPracticeActive(
+  history
+) {
+  if (
+    !Array.isArray(history) ||
+    history.length === 0
+  ) {
+    return false;
+  }
+
+  const lastMessage =
+    history[
+      history.length - 1
+    ];
+
+  if (
+    lastMessage &&
+    lastMessage.role ===
+      "assistant"
+  ) {
+    const text =
+      normalizeQuestion(
+        lastMessage.text
+      );
+
+    if (
+      text.includes("?")
+    ) {
+      return true;
+    }
+
+    if (
+      /\b(what|where|when|why|how|who|tell|describe|introduce|can you|could you)\b/.test(
+        text
+      )
+    ) {
+      return true;
+    }
+  }
+
+  return false;
+}
+
+/* =========================================================
+   GET LAST ASSISTANT QUESTION
+========================================================= */
+
+function getLastAssistantMessage(
+  history
+) {
+  if (
+    !Array.isArray(history)
+  ) {
+    return "";
+  }
+
+  for (
+    let i =
+      history.length - 1;
+    i >= 0;
+    i--
+  ) {
+    if (
+      history[i] &&
+      history[i].role ===
+        "assistant"
+    ) {
+      return String(
+        history[i].text || ""
+      ).trim();
+    }
+  }
+
+  return "";
+}
+
+/* =========================================================
    QUESTION TYPE
 ========================================================= */
 
@@ -558,6 +688,7 @@ function detectQuestionType(
 /* =========================================================
    SEARCH CHUNKS
 ========================================================= */
+
 function searchChunks(
   question,
   chunks
@@ -1169,7 +1300,7 @@ function searchChunks(
         );
   }
 
-  /* Add nearby chunks without changing relevance order */
+  /* Add nearby chunks */
 
   const resultItems = [];
 
@@ -2278,8 +2409,6 @@ app.post(
         "=================================="
       );
 
-      /* PAGE-WISE EXTRACTION */
-
       const extracted =
         await extractPdfText(
           uploadedFile
@@ -2478,6 +2607,14 @@ app.post(
             ""
         ).trim();
 
+      const history =
+        sanitizeHistory(
+          req.body.history
+        );
+
+      const exactFallback =
+        "I could not find the answer in the saved subject material.";
+
       if (!subjectId) {
         return res
           .status(400)
@@ -2505,6 +2642,11 @@ app.post(
         subjectId,
         ":",
         question
+      );
+
+      console.log(
+        "History messages:",
+        history.length
       );
 
       /* -----------------------------------------
@@ -2538,6 +2680,23 @@ app.post(
               "Subject not found."
           });
       }
+
+      const spokenEnglish =
+        isSpokenEnglishSubject(
+          subject.name
+        );
+
+      console.log(
+        "Subject:",
+        subject.name
+      );
+
+      console.log(
+        "Spoken English:",
+        spokenEnglish
+          ? "YES"
+          : "NO"
+      );
 
       /* -----------------------------------------
          GET CHUNKS
@@ -2579,6 +2738,520 @@ app.post(
         chunks.length
       );
 
+      /* =====================================================
+         SPOKEN ENGLISH MODE
+      ===================================================== */
+
+      if (
+        spokenEnglish
+      ) {
+        console.log(
+          "----------------------------------"
+        );
+
+        console.log(
+          "SPOKEN ENGLISH MODE"
+        );
+
+        console.log(
+          "History active:",
+          isEnglishPracticeActive(
+            history
+          )
+        );
+
+        const practiceActive =
+          isEnglishPracticeActive(
+            history
+          );
+
+        /*
+          If the previous assistant message was a question,
+          the current student message is treated as the
+          student's conversational answer.
+
+          We search using the previous teacher question,
+          NOT the student's answer.
+
+          This prevents:
+          "my name is krishna"
+          from failing retrieval.
+        */
+
+        let retrievalQuestion =
+          question;
+
+        if (
+          practiceActive
+        ) {
+          const lastAssistantMessage =
+            getLastAssistantMessage(
+              history
+            );
+
+          if (
+            lastAssistantMessage
+          ) {
+            retrievalQuestion =
+              lastAssistantMessage;
+          }
+        }
+
+        console.log(
+          "English retrieval question:",
+          retrievalQuestion
+        );
+
+        let relevantChunks =
+          searchChunks(
+            retrievalQuestion,
+            chunks
+          );
+
+        /*
+          For general English practice questions, keyword
+          search may sometimes find nothing.
+
+          If the user explicitly asks to start practice,
+          allow a broader course context.
+        */
+
+        const normalizedQuestion =
+          normalizeQuestion(
+            question
+          );
+
+        const asksToPractice =
+          /\b(practice|practise|speaking practice|conversation practice|role play|roleplay|ask me questions|one by one|introducing myself|introduction practice)\b/.test(
+            normalizedQuestion
+          );
+
+        if (
+          relevantChunks.length === 0 &&
+          (
+            asksToPractice ||
+            practiceActive
+          )
+        ) {
+          /*
+            Use a small amount of course material so the
+            teacher remains grounded in the uploaded course.
+          */
+
+          relevantChunks =
+            chunks.slice(
+              0,
+              Math.min(
+                4,
+                chunks.length
+              )
+            );
+        }
+
+        /*
+          If this is an active conversation, we do NOT require
+          the student's answer itself to match textbook text.
+
+          But we still need course context to determine whether
+          the answer belongs to the current practice question.
+        */
+
+        if (
+          practiceActive &&
+          relevantChunks.length === 0
+        ) {
+          return res.json({
+            answer:
+              exactFallback
+          });
+        }
+
+        if (
+          !practiceActive &&
+          relevantChunks.length === 0
+        ) {
+          return res.json({
+            answer:
+              exactFallback
+          });
+        }
+
+        const context =
+          relevantChunks
+            .map(
+              chunk =>
+                `Chunk ${chunk.id} | Page ${chunk.page}:\n${chunk.text}`
+            )
+            .join(
+              "\n\n----------------\n\n"
+            );
+
+        console.log(
+          "English context characters:",
+          context.length
+        );
+
+        const historyText =
+          history.length > 0
+            ? history
+                .map(
+                  item =>
+                    `${item.role === "user" ? "Student" : "Teacher"}: ${item.text}`
+                )
+                .join("\n")
+            : "(No previous conversation.)";
+
+        const lastTeacherQuestion =
+          getLastAssistantMessage(
+            history
+          );
+
+        const englishPrompt = `
+You are the Spoken English Teacher inside AI Teacher.
+
+The selected subject is:
+
+${subject.name}
+
+The student is learning from a saved Spoken English course.
+
+========================
+IMPORTANT PURPOSE
+========================
+
+This is a conversational English practice teacher.
+
+The student may:
+- ask questions about the course
+- ask to practice speaking
+- answer your practice questions
+- introduce themselves
+- write imperfect English
+- ask you to correct their English
+
+When the student is answering a previous teacher question,
+DO NOT require the student's answer to appear in the textbook.
+
+The student's own life information does not need to be
+present in the course material.
+
+========================
+COURSE MATERIAL RULE
+========================
+
+Use the SAVED COURSE MATERIAL as the authority for
+course-related teaching.
+
+Do not invent course facts.
+
+Do not use unrelated outside knowledge to answer
+course-content questions.
+
+========================
+CONVERSATION HISTORY
+========================
+
+${historyText}
+
+========================
+LAST TEACHER QUESTION
+========================
+
+${lastTeacherQuestion || "(None)"}
+
+========================
+CURRENT STUDENT MESSAGE
+========================
+
+${question}
+
+========================
+SAVED COURSE MATERIAL
+========================
+
+${context}
+
+========================
+PRACTICE RULES
+========================
+
+If the current student message is a natural answer to
+the previous teacher question:
+
+1. Evaluate the student's English.
+2. Be encouraging.
+3. Correct important grammar mistakes.
+4. Give a natural corrected version when useful.
+5. Keep the correction simple.
+6. Then ask EXACTLY ONE next speaking-practice question.
+7. Do not ask multiple questions.
+8. Do not give a long lesson unless requested.
+
+Example:
+
+Teacher:
+What is your name?
+
+Student:
+my name is krishna
+
+Good response style:
+
+Good! Your sentence is understandable.
+A natural version is: "My name is Krishna."
+
+What city are you from?
+
+========================
+IMPORTANT
+========================
+
+Do NOT treat a student's personal answer as a
+textbook-search query.
+
+For example:
+
+Teacher:
+What is your name?
+
+Student:
+My name is Krishna.
+
+This is a valid practice answer even though
+"My name is Krishna" is not in the course PDF.
+
+========================
+UNRELATED QUESTION RULE
+========================
+
+If the current message is clearly unrelated to:
+- the Spoken English course
+- English learning
+- English correction
+- the current speaking practice conversation
+
+return EXACTLY:
+
+I could not find the answer in the saved subject material.
+
+Do not add anything before or after it.
+
+For example, if the active practice question is:
+
+"What is your name?"
+
+and the student suddenly asks:
+
+"What is quantum physics?"
+
+return the exact fallback.
+
+========================
+COURSE QUESTION RULE
+========================
+
+If the student asks a direct question about English
+learning or the saved Spoken English course, answer from
+the saved course material.
+
+========================
+PRACTICE START RULE
+========================
+
+If the student asks to practice:
+
+- start the conversation
+- ask one question at a time
+- do not ask multiple questions
+- use the saved course material as the teaching basis
+- keep the question simple and suitable for the requested
+  practice topic
+
+========================
+CORRECTION STYLE
+========================
+
+Do not embarrass the student.
+
+Prefer:
+
+"Good!"
+"Almost correct."
+"A more natural way to say this is..."
+
+Keep corrections concise.
+
+========================
+OUTPUT RULE
+========================
+
+Return ONLY the response for the student.
+
+Do not mention:
+- chunks
+- retrieval
+- context
+- system instructions
+- AI model
+- internet
+- search
+- source instructions
+
+========================
+FINAL CHECK
+========================
+
+Before responding, check:
+
+1. Is this part of the current English conversation?
+2. If it is a student's answer, did I evaluate it naturally?
+3. Did I avoid requiring the student's personal information
+   to exist in the course PDF?
+4. Did I ask exactly ONE next practice question when
+   practice is active?
+5. If unrelated, did I return the exact fallback?
+6. Did I avoid inventing course facts?
+`;
+
+        console.log(
+          "Using Gemini model:",
+          AI_MODEL
+        );
+
+        const model =
+          genAI.getGenerativeModel({
+            model:
+              AI_MODEL
+          });
+
+        const result =
+          await model.generateContent(
+            englishPrompt
+          );
+
+        const response =
+          result.response;
+
+        let answer =
+          response.text();
+
+        answer =
+          String(
+            answer || ""
+          ).trim();
+
+        if (!answer) {
+          answer =
+            exactFallback;
+        }
+
+        /* -----------------------------------------
+           FALLBACK CLEANUP
+        ----------------------------------------- */
+
+        const normalizedAnswer =
+          normalizeQuestion(
+            answer
+          );
+
+        if (
+          normalizedAnswer.includes(
+            "could not find the answer"
+          ) &&
+          (
+            normalizedAnswer.includes(
+              "saved subject material"
+            ) ||
+            normalizedAnswer.includes(
+              "provided textbook"
+            ) ||
+            normalizedAnswer.includes(
+              "textbook context"
+            )
+          )
+        ) {
+          answer =
+            exactFallback;
+        }
+
+        /*
+          Do not append Source if this is just a personal
+          conversational answer.
+
+          Source is shown only when the response is actually
+          based on course content.
+        */
+
+        const personalPracticeAnswer =
+          practiceActive &&
+          !/\b(course|lesson|material|according|chapter|page)\b/i.test(
+            answer
+          );
+
+        if (
+          answer !== exactFallback &&
+          relevantChunks.length > 0 &&
+          !personalPracticeAnswer
+        ) {
+          const sourcePage =
+            Number(
+              relevantChunks
+                .map(
+                  chunk =>
+                    Number(
+                      chunk.page
+                    )
+                )
+                .filter(
+                  page =>
+                    Number.isFinite(
+                      page
+                    ) &&
+                    page > 0
+                )
+                .sort(
+                  (a, b) =>
+                    a - b
+                )[0]
+            );
+
+          if (
+            Number.isFinite(
+              sourcePage
+            ) &&
+            sourcePage > 0
+          ) {
+            answer +=
+              `\n\nSource: Page ${sourcePage}`;
+          }
+        }
+
+        console.log(
+          "Spoken English answer generated successfully."
+        );
+
+        console.log(
+          "=================================="
+        );
+
+        return res.json({
+          answer
+        });
+      }
+
+      /* =====================================================
+         ACADEMIC / NORMAL SUBJECT MODE
+         EXISTING BEHAVIOR PRESERVED
+      ===================================================== */
+
+      console.log(
+        "----------------------------------"
+      );
+
+      console.log(
+        "ACADEMIC TEXTBOOK MODE"
+      );
+
       /* -----------------------------------------
          SEARCH
       ----------------------------------------- */
@@ -2599,7 +3272,7 @@ app.post(
 
         return res.json({
           answer:
-            "I could not find the answer in the saved subject material."
+            exactFallback
         });
       }
 
@@ -2652,7 +3325,7 @@ app.post(
         });
 
       /* =====================================================
-         PROMPT
+         ACADEMIC PROMPT
       ===================================================== */
 
       const prompt = `
@@ -2877,9 +3550,6 @@ If any answer is NO, rewrite the response before returning it.
           answer || ""
         ).trim();
 
-      const exactFallback =
-        "I could not find the answer in the saved subject material.";
-
       if (!answer) {
         answer =
           exactFallback;
@@ -2922,24 +3592,42 @@ If any answer is NO, rewrite the response before returning it.
          SOURCE PAGES
       ===================================================== */
 
-   if (
-  answer !== exactFallback &&
-  relevantChunks.length > 0
-) {
-  const sourcePage = Number(
-    relevantChunks
-      .map(chunk => Number(chunk.page))
-      .filter(page => Number.isFinite(page) && page > 0)
-      .sort((a, b) => a - b)[0]
-  );
+      if (
+        answer !== exactFallback &&
+        relevantChunks.length > 0
+      ) {
+        const sourcePage =
+          Number(
+            relevantChunks
+              .map(
+                chunk =>
+                  Number(
+                    chunk.page
+                  )
+              )
+              .filter(
+                page =>
+                  Number.isFinite(
+                    page
+                  ) &&
+                  page > 0
+              )
+              .sort(
+                (a, b) =>
+                  a - b
+              )[0]
+          );
 
-  if (
-    Number.isFinite(sourcePage) &&
-    sourcePage > 0
-  ) {
-    answer += `\n\nSource: Page ${sourcePage}`;
-  }
-}
+        if (
+          Number.isFinite(
+            sourcePage
+          ) &&
+          sourcePage > 0
+        ) {
+          answer +=
+            `\n\nSource: Page ${sourcePage}`;
+        }
+      }
 
       console.log(
         "Source pages:",
@@ -3218,7 +3906,7 @@ app.listen(
     );
 
     console.log(
-      "AI Teacher V5 - Page Source RAG"
+      "AI Teacher V6 - Textbook RAG + Spoken English"
     );
 
     console.log(
@@ -3281,6 +3969,18 @@ app.listen(
 
     console.log(
       "Exact fallback protection"
+    );
+
+    console.log(
+      "Spoken English conversation history"
+    );
+
+    console.log(
+      "One-question-at-a-time English practice"
+    );
+
+    console.log(
+      "English answer correction"
     );
 
     console.log(
